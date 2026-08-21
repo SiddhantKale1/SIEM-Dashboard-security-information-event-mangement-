@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --color-dark-bg: #0f1115;
+  --color-dark-surface: #1a1d24;
+  --color-dark-border: #2e3340;
+  --color-brand-primary: #3b82f6;
+  --color-brand-secondary: #8b5cf6;
+}
+
+body {
+  @apply bg-[var(--color-dark-bg)] text-gray-100 font-sans antialiased selection:bg-brand-primary/30;
+}
+
+.glass-panel {
+  @apply bg-[var(--color-dark-surface)]/80 backdrop-blur-md border border-[var(--color-dark-border)] rounded-xl shadow-xl;
+}
+
+.input-field {
+  @apply w-full bg-[#111318] border border-[var(--color-dark-border)] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all;
+}
+
+.btn-primary {
+  @apply bg-brand-primary hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)];
+}
+
+.btn-secondary {
+  @apply bg-[#2a2e39] hover:bg-[#323744] text-gray-200 border border-[var(--color-dark-border)] font-medium py-2.5 px-4 rounded-lg transition-all;
+}
+
+.btn-danger {
+  @apply bg-red-600/20 hover:bg-red-600/30 text-red-500 border border-red-900/50 font-medium py-2 px-4 rounded-lg transition-all;
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-[#2a2e39] rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#3a404f];
+}

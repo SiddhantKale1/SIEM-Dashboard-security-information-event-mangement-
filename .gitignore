@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+env/
+.venv/
+.env
+*.log
+
+# Node / Frontend
+node_modules/
+dist/
+.cache/
+*.local
+
+# Database (persistent file-based DB — don't commit data)
+backend/siem_data/
+
+# Agent config (contains device credentials — keep secret)
+agents/linux/agent_config.json
+agents/windows/agent_config.json
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage

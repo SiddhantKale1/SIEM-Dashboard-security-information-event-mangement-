@@ -98,8 +98,9 @@ async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm
         )
         
     # Update last login
+    update_filter = {"_id": user["_id"]} if "_id" in user else {"username": user["username"]}
     await db.users.update_one(
-        {"_id": user["_id"]},
+        update_filter,
         {"$set": {"last_login": datetime.now(timezone.utc)}}
     )
         

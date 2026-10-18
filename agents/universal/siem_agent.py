@@ -123,6 +123,14 @@ class HTTPTransport:
                     return json.loads(res.read().decode('utf-8'))
         except urllib.error.HTTPError as e:
             logger.error(f"HTTP error on {endpoint}: {e.code} - {e.reason}")
+            if e.code == 404 and endpoint == "/agent/heartbeat":
+                logger.warning("Device record not found on SIEM server. Resetting credentials to re-enroll...")
+                self.config.device_id = None
+                self.config.device_credential = None
+                try:
+                    self.config.save()
+                except Exception:
+                    pass
         except Exception as e:
             logger.warning(f"Connection failure to {url}: {e}")
         return None
@@ -691,6 +699,13 @@ del "%~f0" >nul
 
         while True:
             now = time.time()
+
+            # Check if re-enrollment needed
+            if not self.config.device_id or not self.config.device_credential:
+                logger.info("Agent credentials missing or revoked. Re-enrolling with SIEM server...")
+                if not self.enroll_if_needed():
+                    time.sleep(5)
+                    continue
 
             # Dynamic network change detection
             fresh_ip = get_ip_address()

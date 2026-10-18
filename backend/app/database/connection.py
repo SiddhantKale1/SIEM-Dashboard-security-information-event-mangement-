@@ -54,21 +54,54 @@ class _MongitaCollectionWrapper:
         return self._col.update_many(filter, update)
 
     async def delete_one(self, filter):
-        return self._col.delete_one(filter)
+        try:
+            return self._col.delete_one(filter)
+        except Exception as e:
+            logger.warning(f"delete_one handled error: {e}")
+            return type('DeleteResult', (), {'deleted_count': 0})()
 
     async def delete_many(self, filter):
-        return self._col.delete_many(filter)
+        try:
+            return self._col.delete_many(filter)
+        except Exception as e:
+            logger.warning(f"delete_many handled error: {e}")
+            count = 0
+            try:
+                matching = list(self._col.find(filter or {}))
+                for m in matching:
+                    try:
+                        self._col.delete_one({"_id": m["_id"]})
+                        count += 1
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            return type('DeleteResult', (), {'deleted_count': count})()
 
     # --- read ops ---
     async def find_one(self, filter=None, *args, **kwargs):
-        return self._col.find_one(filter or {})
+        try:
+            return self._col.find_one(filter or {})
+        except Exception as e:
+            logger.warning(f"find_one handled error: {e}")
+            return None
 
     def find(self, filter=None, **kwargs):
-        # Return an async-compatible cursor wrapper
-        return _MongitaCursorWrapper(self._col.find(filter or {}))
+        try:
+            return _MongitaCursorWrapper(self._col.find(filter or {}))
+        except Exception as e:
+            logger.warning(f"find handled error: {e}")
+            return _MongitaCursorWrapper([])
 
     async def count_documents(self, filter=None):
-        return self._col.count_documents(filter or {})
+        try:
+            return self._col.count_documents(filter or {})
+        except Exception as e:
+            logger.warning(f"count_documents handled error: {e}")
+            try:
+                return len(list(self._col.find(filter or {})))
+            except Exception:
+                return 0
 
     async def create_index(self, keys, **kwargs):
         pass  # mongita handles indexing automatically; no-op here
@@ -93,7 +126,11 @@ class _MongitaCursorWrapper:
         return self
 
     async def to_list(self, length=None):
-        results = list(self._cursor)
+        try:
+            results = list(self._cursor)
+        except Exception as e:
+            logger.warning(f"cursor to_list handled error: {e}")
+            results = []
         if self._sort_key:
             import pymongo
             from datetime import datetime, timezone

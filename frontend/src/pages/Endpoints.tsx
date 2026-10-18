@@ -106,7 +106,7 @@ export default function Endpoints() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 8000);
+    const interval = setInterval(loadData, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -140,6 +140,15 @@ export default function Endpoints() {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
+          <button 
+            onClick={loadData}
+            className="neo-btn"
+            style={{ padding: '8px 14px', fontSize: '0.82rem', background: '#0a0f1b' }}
+            title="Refresh Fleet Roster"
+          >
+            <RefreshCw size={14} /> Refresh
+          </button>
+
           <button 
             onClick={() => setActiveTab(activeTab === 'view_devices' ? 'installers' : 'view_devices')}
             className="neo-btn neo-btn-cyan"

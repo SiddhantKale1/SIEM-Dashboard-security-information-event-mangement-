@@ -75,6 +75,7 @@ class AgentConfig:
     def save(self):
         data = {
             "server_url": self.server_url,
+            "enrollment_token": self.enrollment_token,
             "device_id": self.device_id,
             "device_credential": self.device_credential,
             "saved_at": datetime.now(timezone.utc).isoformat()
@@ -117,7 +118,7 @@ class HTTPTransport:
             req.add_header('Authorization', f"Bearer {self.config.device_credential}")
 
         try:
-            with urllib.request.urlopen(req, timeout=8) as res:
+            with urllib.request.urlopen(req, timeout=15) as res:
                 if res.status in (200, 201):
                     return json.loads(res.read().decode('utf-8'))
         except urllib.error.HTTPError as e:

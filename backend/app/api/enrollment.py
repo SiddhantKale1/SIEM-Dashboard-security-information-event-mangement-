@@ -1,6 +1,8 @@
 import secrets
 import string
 import uuid
+import hashlib
+import asyncio
 from typing import Optional, List
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request, status
@@ -20,6 +22,9 @@ def generate_enrollment_token() -> str:
     part2 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
     return f"ENROLL-{part1}-{part2}"
 
+def hash_enrollment_token(token: str) -> str:
+    return hashlib.sha256(token.strip().encode("utf-8")).hexdigest()
+
 @router.post("/token")
 async def create_enrollment_token(
     reusable: bool = Query(True, description="Allow token to be used on multiple endpoint PCs"),
@@ -28,7 +33,7 @@ async def create_enrollment_token(
 ):
     db = get_db()
     token = generate_enrollment_token()
-    token_hash = get_password_hash(token)
+    token_hash = hash_enrollment_token(token)
     expires_at = datetime.now(timezone.utc) + timedelta(days=days_valid)
     net_info = NetworkManager.get_local_network_info()
     server_ip = net_info.get("server_ip", "127.0.0.1")
@@ -36,7 +41,7 @@ async def create_enrollment_token(
 
     await db.enrollment_tokens.insert_one({
         "token_hash": token_hash,
-        "token_preview": f"{token[:7]}...",
+        "token_preview": f"{token[:11]}...",
         "created_by": current_user["username"],
         "created_at": datetime.now(timezone.utc),
         "expires_at": expires_at,
@@ -66,14 +71,14 @@ async def create_enrollment_token(
 @router.post("/register", response_model=DeviceRegistrationResponse)
 async def register_device(request: DeviceRegistrationRequest):
     db = get_db()
-    
-    # Query valid tokens
     now = datetime.now(timezone.utc)
-    cursor = db.enrollment_tokens.find({})
+    token_str = (request.token or "").strip()
+    sha_hash = hash_enrollment_token(token_str)
     
-    valid_token_doc = None
-    async for doc in cursor:
-        exp = doc.get("expires_at")
+    # 1. Fast direct O(1) hash lookup (<1ms)
+    valid_token_doc = await db.enrollment_tokens.find_one({"token_hash": sha_hash})
+    if valid_token_doc:
+        exp = valid_token_doc.get("expires_at")
         if exp:
             if isinstance(exp, str):
                 try:
@@ -83,24 +88,52 @@ async def register_device(request: DeviceRegistrationRequest):
             if hasattr(exp, "tzinfo") and exp.tzinfo is None:
                 exp = exp.replace(tzinfo=timezone.utc)
             if hasattr(exp, "timestamp") and exp < now:
+                valid_token_doc = None
+        if valid_token_doc and not valid_token_doc.get("reusable", False) and valid_token_doc.get("used", False):
+            valid_token_doc = None
+
+    # 2. Backward compatibility fallback for legacy bcrypt tokens (checked newest first!)
+    if not valid_token_doc:
+        cursor = db.enrollment_tokens.find({}).sort("created_at", -1)
+        async for doc in cursor:
+            exp = doc.get("expires_at")
+            if exp:
+                if isinstance(exp, str):
+                    try:
+                        exp = datetime.fromisoformat(exp.replace("Z", "+00:00"))
+                    except Exception:
+                        pass
+                if hasattr(exp, "tzinfo") and exp.tzinfo is None:
+                    exp = exp.replace(tzinfo=timezone.utc)
+                if hasattr(exp, "timestamp") and exp < now:
+                    continue
+
+            if not doc.get("reusable", False) and doc.get("used", False):
                 continue
 
-        if not doc.get("reusable", False) and doc.get("used", False):
-            continue
-        # Fast prefix match before expensive bcrypt verification
-        preview = doc.get("token_preview", "")
-        if preview and not request.token.startswith(preview.rstrip(".")):
-            continue
-        if verify_password(request.token, doc["token_hash"]):
-            valid_token_doc = doc
-            break
+            th = doc.get("token_hash", "")
+            if th and th.startswith("$2"):
+                # Run bcrypt in worker thread so event loop never freezes
+                is_match = await asyncio.to_thread(verify_password, token_str, th)
+                if is_match:
+                    valid_token_doc = doc
+                    # Automatically upgrade stored hash to instant SHA-256 for all future checks
+                    await db.enrollment_tokens.update_one(
+                        {"_id": doc["_id"]},
+                        {"$set": {"token_hash": sha_hash, "token_preview": f"{token_str[:11]}..."}}
+                    )
+                    break
             
     if not valid_token_doc:
         logger.warning(f"Failed enrollment attempt from {request.ip_address} - Invalid or expired token")
         raise HTTPException(status_code=400, detail="Invalid or expired enrollment token")
 
-    # Generate permanent device ID
-    device_id = f"device-{uuid.uuid4().hex[:8]}"
+    # Generate or reuse permanent device ID (avoiding duplicate records for same MAC)
+    existing_device = None
+    if request.mac_address:
+        existing_device = await db.devices.find_one({"mac_address": request.mac_address})
+
+    device_id = (existing_device.get("device_id") if existing_device and existing_device.get("device_id") else None) or f"device-{uuid.uuid4().hex[:8]}"
     net_info = NetworkManager.get_local_network_info()
     
     new_device = {
@@ -114,11 +147,14 @@ async def register_device(request: DeviceRegistrationRequest):
         "status": "online",
         "subnet": net_info.get("subnet", "192.168.1.0/24"),
         "last_seen": now,
-        "enrolled_at": now,
-        "created_at": now
+        "enrolled_at": existing_device.get("enrolled_at", now) if existing_device else now,
+        "created_at": existing_device.get("created_at", now) if existing_device else now
     }
     
-    await db.devices.insert_one(new_device)
+    if existing_device:
+        await db.devices.update_one({"_id": existing_device["_id"]}, {"$set": new_device})
+    else:
+        await db.devices.insert_one(new_device)
     
     # Update token usage
     update_fields = {

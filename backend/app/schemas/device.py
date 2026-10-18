@@ -31,3 +31,9 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     username: str
     role: str
+    must_change_password: bool = False
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+

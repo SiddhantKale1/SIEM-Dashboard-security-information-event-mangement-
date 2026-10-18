@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Devices from './pages/Devices';
+import Threats from './pages/Threats';
+import NetworkTraffic from './pages/NetworkTraffic';
+import Endpoints from './pages/Endpoints';
+import Simulator from './pages/Simulator';
 import DeviceDetails from './pages/DeviceDetails';
 import Logs from './pages/Logs';
 import MainLayout from './layouts/MainLayout';
@@ -16,18 +19,22 @@ function PrivateRoute({ children }: { children: ReactNode }) {
 function App() {
   return (
     <DeviceProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-          <Route index element={<Dashboard />} />
-          <Route path="devices" element={<Devices />} />
-          <Route path="devices/:id" element={<DeviceDetails />} />
-          <Route path="logs" element={<Logs />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+            <Route index element={<Dashboard />} />
+            <Route path="threats" element={<Threats />} />
+            <Route path="network" element={<NetworkTraffic />} />
+            <Route path="endpoints" element={<Endpoints />} />
+            <Route path="devices" element={<Endpoints />} />
+            <Route path="devices/:id" element={<DeviceDetails />} />
+            <Route path="simulator" element={<Simulator />} />
+            <Route path="logs" element={<Logs />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </DeviceProvider>
   );
 }

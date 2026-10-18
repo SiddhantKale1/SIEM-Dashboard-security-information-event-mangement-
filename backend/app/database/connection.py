@@ -41,7 +41,14 @@ class _MongitaCollectionWrapper:
         return self._col.insert_many(docs)
 
     async def update_one(self, filter, update, upsert=False):
-        return self._col.update_one(filter, update, upsert=upsert)
+        if upsert:
+            existing = self._col.find_one(filter)
+            if not existing:
+                new_doc = dict(filter)
+                if "$set" in update:
+                    new_doc.update(update["$set"])
+                return self._col.insert_one(new_doc)
+        return self._col.update_one(filter, update)
 
     async def update_many(self, filter, update):
         return self._col.update_many(filter, update)
@@ -89,13 +96,26 @@ class _MongitaCursorWrapper:
         results = list(self._cursor)
         if self._sort_key:
             import pymongo
+            from datetime import datetime, timezone
             reverse = (self._sort_dir == pymongo.DESCENDING or self._sort_dir == -1)
-            results.sort(key=lambda x: x.get(self._sort_key) or "", reverse=reverse)
+
+            def _sort_val(doc):
+                v = doc.get(self._sort_key)
+                if v is None:
+                    return ""
+                if isinstance(v, datetime):
+                    if v.tzinfo is None:
+                        v = v.replace(tzinfo=timezone.utc)
+                    return v.isoformat()
+                return str(v)
+
+            results.sort(key=_sort_val, reverse=reverse)
         if self._limit_val is not None:
             results = results[:self._limit_val]
         if length is not None:
             results = results[:length]
         return results
+
 
     def __aiter__(self):
         self._iter = iter(list(self._cursor))

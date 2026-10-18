@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin');
   const [showPw, setShowPw]     = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -15,72 +15,109 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
-      const fd = new FormData();
-      fd.append('username', username);
-      fd.append('password', password);
-      const res = await api.post('/auth/login', fd);
-      localStorage.setItem('access_token', res.data.access_token);
-      navigate('/');
+      const params = new URLSearchParams();
+      params.append('username', username.trim());
+      params.append('password', password);
+
+      const res = await api.post('/auth/login', params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      if (res.data?.access_token) {
+        localStorage.setItem('access_token', res.data.access_token);
+        navigate('/');
+      } else {
+        setError('No access token received from server.');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid credentials. Please try again.');
+      console.error("Login attempt failed:", err);
+      const msg = err.response?.data?.detail || err.message || 'Invalid credentials. Please try again.';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setLoading(false);
     }
   };
 
+  const fillAdmin = () => {
+    setUsername('admin');
+    setPassword('admin');
+    setError('');
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--color-dark-bg)',
-      position: 'relative', overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#070a11',
+      position: 'relative',
+      padding: 20
     }}>
-      {/* Glow orbs */}
+      {/* Cyber Grid Background Texture */}
       <div style={{
-        position: 'absolute', top: '-20%', left: '-10%',
-        width: '60%', height: '60%', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: `
+          linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px)
+        `,
+        backgroundSize: '36px 36px',
         pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '-20%', right: '-10%',
-        width: '55%', height: '55%', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%)',
-        pointerEvents: 'none',
+        opacity: 0.8
       }} />
 
-      {/* Card */}
-      <div className="glass-panel" style={{ width: '100%', maxWidth: 400, padding: 36, position: 'relative', zIndex: 1 }}>
-
-        {/* Logo */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+      {/* Cyber-Neobrutalism Bento Card */}
+      <div 
+        className="bento-card bento-card-cyan" 
+        style={{
+          width: '100%',
+          maxWidth: 420,
+          padding: 32,
+          position: 'relative',
+          zIndex: 1,
+          background: '#0d131f'
+        }}
+      >
+        {/* Brand Icon & Heading */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28, textAlign: 'center' }}>
           <div style={{
-            width: 56, height: 56,
-            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-            borderRadius: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 16,
-            boxShadow: '0 0 32px rgba(59,130,246,0.3), 0 0 80px rgba(139,92,246,0.15)',
+            width: 52,
+            height: 52,
+            background: '#8b5cf6',
+            borderRadius: 12,
+            border: '2.5px solid #000',
+            boxShadow: '4px 4px 0px #000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 14
           }}>
-            <Shield size={26} color="white" />
+            <Sparkles size={28} color="#ffffff" />
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.03em' }}>
-            SIEM<span style={{ color: '#3b82f6' }}>MVP</span>
+
+          <h1 style={{ margin: 0, fontSize: '1.65rem', fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.03em' }}>
+            AETHER<span style={{ color: '#06b6d4' }}>SIEM</span>
           </h1>
-          <p style={{ margin: '6px 0 0', color: '#334155', fontSize: '0.82rem' }}>
-            Security & Telemetry Platform
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.8rem', fontFamily: 'JetBrains Mono, monospace' }}>
+            AI-DRIVEN SECURITY MONITORING
           </p>
         </div>
 
-        {/* Error */}
+        {/* Error Notification */}
         {error && (
           <div style={{
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.2)',
-            borderRadius: 10, padding: '11px 14px',
-            color: '#f87171', fontSize: '0.82rem',
-            marginBottom: 20,
+            background: 'rgba(244,63,94,0.12)',
+            border: '2px solid #f43f5e',
+            borderRadius: 8,
+            padding: '10px 14px',
+            color: '#f43f5e',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            marginBottom: 18,
+            boxShadow: '2px 2px 0px #000'
           }}>
             {error}
           </div>
@@ -90,14 +127,25 @@ export default function Login() {
 
           {/* Username */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', letterSpacing: '0.03em' }}>
-              USERNAME
+            <label style={{ fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.04em' }}>
+              OPERATOR USERNAME
             </label>
             <div style={{ position: 'relative' }}>
-              <User size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#334155', pointerEvents: 'none' }} />
+              <User size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
               <input
-                className="input-field"
-                style={{ paddingLeft: 36 }}
+                style={{
+                  width: '100%',
+                  background: '#070a11',
+                  border: '2px solid #1e293b',
+                  borderRadius: 8,
+                  padding: '10px 12px 10px 38px',
+                  color: '#f8fafc',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  transition: 'border-color 0.15s'
+                }}
                 type="text"
                 placeholder="admin"
                 value={username}
@@ -110,16 +158,27 @@ export default function Login() {
 
           {/* Password */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', letterSpacing: '0.03em' }}>
-              PASSWORD
+            <label style={{ fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.04em' }}>
+              ACCESS CREDENTIAL
             </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#334155', pointerEvents: 'none' }} />
+              <Lock size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
               <input
-                className="input-field"
-                style={{ paddingLeft: 36, paddingRight: 40 }}
+                style={{
+                  width: '100%',
+                  background: '#070a11',
+                  border: '2px solid #1e293b',
+                  borderRadius: 8,
+                  padding: '10px 40px 10px 38px',
+                  color: '#f8fafc',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  transition: 'border-color 0.15s'
+                }}
                 type={showPw ? 'text' : 'password'}
-                placeholder="••••••••"
+                placeholder="admin"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -130,31 +189,54 @@ export default function Login() {
                 onClick={() => setShowPw(v => !v)}
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer', color: '#334155', padding: 0,
+                  background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0,
                 }}
               >
-                {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          {/* Default creds hint */}
-          <p style={{ margin: 0, fontSize: '0.75rem', color: '#1e2535', textAlign: 'center' }}>
-            Default: <span style={{ color: '#2d3748', fontFamily: 'monospace' }}>admin / admin</span>
-          </p>
+          {/* 1-Click Credential Preset */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '8px 12px',
+            background: '#070a11',
+            borderRadius: 6,
+            border: '1.5px solid #1e293b'
+          }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              Default: <strong style={{ color: '#06b6d4', fontFamily: 'JetBrains Mono, monospace' }}>admin / admin</strong>
+            </span>
+            <button
+              type="button"
+              onClick={fillAdmin}
+              style={{
+                background: 'none', border: 'none', color: '#38bdf8',
+                fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline'
+              }}
+            >
+              Fill Credentials
+            </button>
+          </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            className="btn-primary"
             disabled={loading}
-            style={{ width: '100%', justifyContent: 'center', marginTop: 4, padding: '11px' }}
+            className="neo-btn neo-btn-cyan"
+            style={{ width: '100%', padding: '12px', fontSize: '0.9rem', marginTop: 6 }}
           >
-            {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : 'Sign In →'}
+            {loading ? 'Authenticating...' : (
+              <>
+                Enter Defense Matrix <ArrowRight size={16} />
+              </>
+            )}
           </button>
         </form>
       </div>
-
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

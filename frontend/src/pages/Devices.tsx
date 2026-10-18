@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDevices } from '../context/DeviceContext';
 import api from '../services/api';
-import { Search, Plus, RefreshCw, Server, Copy, Check } from 'lucide-react';
+import { Search, Plus, RefreshCw, Server, Copy, Check, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
+import { copyToClipboard } from '../utils/clipboard';
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -16,12 +17,30 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function Devices() {
   const { devices, loading, fetchDevices, invalidate } = useDevices();
-  const [search, setSearch]       = useState('');
+  const [search, setSearch]           = useState('');
   const [enrollToken, setEnrollToken] = useState('');
-  const [scanning, setScanning]   = useState(false);
-  const [copied, setCopied]       = useState(false);
+  const [activeTokens, setActiveTokens] = useState<any[]>([]);
+  const [scanning, setScanning]       = useState(false);
+  const [copied, setCopied]           = useState(false);
+  const [actionDeviceId, setActionDeviceId] = useState<string | null>(null);
+  const [toast, setToast]             = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
-  useEffect(() => { fetchDevices(false); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const fetchTokens = async () => {
+    try {
+      const res = await api.get('/enrollment/tokens');
+      setActiveTokens(res.data);
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => { 
+    fetchDevices(false); 
+    fetchTokens();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const handleScan = async () => {
     setScanning(true);
@@ -33,16 +52,57 @@ export default function Devices() {
     try {
       const res = await api.post('/enrollment/token');
       setEnrollToken(res.data.token);
+      fetchTokens();
       invalidate();
     } catch (err) { console.error(err); }
   };
 
-  const copyCmd = () => {
-    const cmd = `export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="http://127.0.0.1:8002" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`;
-    navigator.clipboard.writeText(cmd).then(() => {
+  const handleRevokeToken = async (id: string) => {
+    if (!window.confirm('Revoke this token? It will no longer be usable for enrollment.')) return;
+    try {
+      await api.delete(`/enrollment/tokens/${id}`);
+      showToast('Token revoked.');
+      fetchTokens();
+    } catch (err: any) {
+      showToast(err?.response?.data?.detail || 'Failed to revoke token', 'error');
+    }
+  };
+
+  const handleIsolate = async (deviceId: string, hostname: string) => {
+    if (!window.confirm(`Isolate "${hostname}"? The device agent will be blocked from communicating.`)) return;
+    setActionDeviceId(deviceId);
+    try {
+      await api.post(`/devices/${deviceId}/isolate`);
+      showToast(`${hostname} has been isolated.`);
+      await fetchDevices(true);
+    } catch (err: any) {
+      showToast(err?.response?.data?.detail || 'Isolation failed.', 'error');
+    } finally {
+      setActionDeviceId(null);
+    }
+  };
+
+  const handleRestore = async (deviceId: string, hostname: string) => {
+    if (!window.confirm(`Restore access for "${hostname}"?`)) return;
+    setActionDeviceId(deviceId);
+    try {
+      await api.post(`/devices/${deviceId}/restore`);
+      showToast(`${hostname} access restored.`);
+      await fetchDevices(true);
+    } catch (err: any) {
+      showToast(err?.response?.data?.detail || 'Restore failed.', 'error');
+    } finally {
+      setActionDeviceId(null);
+    }
+  };
+
+  const copyCmd = async () => {
+    const cmd = `export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="http://127.0.0.1:8000" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`;
+    const success = await copyToClipboard(cmd);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }
   };
 
   const filtered = devices.filter(d =>
@@ -54,6 +114,20 @@ export default function Devices() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 9999,
+          background: toast.type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+          border: `1px solid ${toast.type === 'success' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
+          color: toast.type === 'success' ? '#4ade80' : '#f87171',
+          padding: '12px 20px', borderRadius: 12, fontSize: '0.875rem', fontWeight: 500,
+          backdropFilter: 'blur(8px)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        }}>
+          {toast.msg}
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -95,7 +169,7 @@ export default function Devices() {
           </p>
           <div style={{ position: 'relative' }}>
             <div className="code-block">
-              {`export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="http://127.0.0.1:8002" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`}
+              {`export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="http://127.0.0.1:8000" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`}
             </div>
             <button
               onClick={copyCmd}
@@ -115,9 +189,41 @@ export default function Devices() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Active Tokens (FEAT-4) */}
+      {activeTokens.length > 0 && !enrollToken && (
+        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <h4 style={{ margin: 0, color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem' }}>
+            Active Enrollment Tokens
+          </h4>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {activeTokens.map((t, i) => (
+              <div key={t.id || i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 14px', background: 'rgba(30,37,53,0.4)', borderRadius: 8, border: '1px solid var(--color-dark-border)'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ color: '#cbd5e1', fontSize: '0.85rem', fontFamily: 'monospace' }}>{t.id}</span>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                    Created by {t.created_by} · Expires {format(new Date(t.expires_at), 'MMM d, HH:mm')}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleRevokeToken(t.id)}
+                  style={{
+                    background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)',
+                    padding: '4px 10px', borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer',
+                  }}
+                >
+                  Revoke
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Device table */}
       <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        {/* Toolbar */}
         <div style={{
           padding: '14px 20px',
           borderBottom: '1px solid var(--color-dark-border)',
@@ -171,10 +277,10 @@ export default function Devices() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
                         width: 32, height: 32, borderRadius: 8,
-                        background: 'rgba(59,130,246,0.08)',
+                        background: device.status === 'isolated' ? 'rgba(239,68,68,0.08)' : 'rgba(59,130,246,0.08)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
-                        <Server size={15} color="#60a5fa" />
+                        <Server size={15} color={device.status === 'isolated' ? '#f87171' : '#60a5fa'} />
                       </div>
                       <div>
                         <p style={{ margin: 0, color: '#e2e8f0', fontWeight: 500, fontSize: '0.875rem' }}>
@@ -206,7 +312,7 @@ export default function Devices() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     {device.device_id ? (
-                      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
                         <Link to={`/devices/${device.device_id}`} style={{
                           color: '#60a5fa', fontSize: '0.8rem', fontWeight: 500,
                           textDecoration: 'none', padding: '4px 10px',
@@ -215,14 +321,37 @@ export default function Devices() {
                         }}>
                           View
                         </Link>
-                        {device.status !== 'isolated' && (
-                          <button style={{
-                            color: '#f87171', fontSize: '0.8rem', fontWeight: 500,
-                            background: 'rgba(239,68,68,0.06)', borderRadius: 6,
-                            border: '1px solid rgba(239,68,68,0.15)',
-                            padding: '4px 10px', cursor: 'pointer',
-                          }}>
+                        {device.status !== 'isolated' ? (
+                          <button
+                            disabled={actionDeviceId === device.device_id}
+                            onClick={() => handleIsolate(device.device_id, device.hostname || 'this device')}
+                            style={{
+                              color: '#f87171', fontSize: '0.8rem', fontWeight: 500,
+                              background: 'rgba(239,68,68,0.06)', borderRadius: 6,
+                              border: '1px solid rgba(239,68,68,0.15)',
+                              padding: '4px 10px', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              opacity: actionDeviceId === device.device_id ? 0.5 : 1,
+                            }}
+                          >
+                            <ShieldAlert size={12} />
                             Isolate
+                          </button>
+                        ) : (
+                          <button
+                            disabled={actionDeviceId === device.device_id}
+                            onClick={() => handleRestore(device.device_id, device.hostname || 'this device')}
+                            style={{
+                              color: '#4ade80', fontSize: '0.8rem', fontWeight: 500,
+                              background: 'rgba(34,197,94,0.06)', borderRadius: 6,
+                              border: '1px solid rgba(34,197,94,0.2)',
+                              padding: '4px 10px', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              opacity: actionDeviceId === device.device_id ? 0.5 : 1,
+                            }}
+                          >
+                            <ShieldCheck size={12} />
+                            Restore
                           </button>
                         )}
                       </div>

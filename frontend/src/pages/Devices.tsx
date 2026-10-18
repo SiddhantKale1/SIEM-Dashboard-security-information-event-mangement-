@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDevices } from '../context/DeviceContext';
 import api from '../services/api';
-import { Search, Plus, RefreshCw, Server, Copy, Check, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Search, Plus, RefreshCw, Server, Copy, Check, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { copyToClipboard } from '../utils/clipboard';
 
@@ -91,6 +91,21 @@ export default function Devices() {
       await fetchDevices(true);
     } catch (err: any) {
       showToast(err?.response?.data?.detail || 'Restore failed.', 'error');
+    } finally {
+      setActionDeviceId(null);
+    }
+  };
+
+  const handleDelete = async (deviceId: string, hostname: string) => {
+    if (!window.confirm(`Permanently remove "${hostname}" from monitoring?\n\nThis will purge all associated logs, telemetry, and connection history from the database.`)) return;
+    setActionDeviceId(deviceId);
+    try {
+      await api.delete(`/devices/${deviceId}`);
+      showToast(`${hostname} removed from monitoring.`);
+      invalidate();
+      await fetchDevices(true);
+    } catch (err: any) {
+      showToast(err?.response?.data?.detail || 'Delete failed.', 'error');
     } finally {
       setActionDeviceId(null);
     }
@@ -355,9 +370,41 @@ export default function Devices() {
                             Restore
                           </button>
                         )}
+                        <button
+                          disabled={actionDeviceId === device.device_id}
+                          onClick={() => handleDelete(device.device_id, device.hostname || 'this device')}
+                          style={{
+                            color: '#f87171', fontSize: '0.8rem', fontWeight: 500,
+                            background: 'rgba(239,68,68,0.06)', borderRadius: 6,
+                            border: '1px solid rgba(239,68,68,0.15)',
+                            padding: '4px 8px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 5,
+                            opacity: actionDeviceId === device.device_id ? 0.5 : 1,
+                          }}
+                          title="Permanently remove from monitoring system"
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </div>
                     ) : (
-                      <span style={{ color: '#334155', fontSize: '0.8rem' }}>Unmanaged</span>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <span style={{ color: '#334155', fontSize: '0.8rem' }}>Unmanaged</span>
+                        <button
+                          disabled={actionDeviceId === (device._id || device.ip_address)}
+                          onClick={() => handleDelete(device._id || device.ip_address, device.hostname || device.ip_address || 'this node')}
+                          style={{
+                            color: '#f87171', fontSize: '0.8rem', fontWeight: 500,
+                            background: 'rgba(239,68,68,0.06)', borderRadius: 6,
+                            border: '1px solid rgba(239,68,68,0.15)',
+                            padding: '4px 8px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 5,
+                            opacity: actionDeviceId === (device._id || device.ip_address) ? 0.5 : 1,
+                          }}
+                          title="Permanently remove from monitoring system"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>

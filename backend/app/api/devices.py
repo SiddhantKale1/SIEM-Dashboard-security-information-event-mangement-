@@ -120,6 +120,73 @@ async def restore_device(device_id: str, current_user: dict = Depends(get_curren
     })
     return {"status": "online", "device_id": device_id}
 
+@router.delete("/{device_id}")
+async def delete_device(device_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Permanently delete a device from the SIEM monitoring system.
+    Cascades removal across:
+    - devices
+    - logs
+    - metrics
+    - processes
+    - device_events
+    - connection_history
+    - anomalies
+    """
+    db = get_db()
+
+    # Look up device by device_id or string _id / ObjectId
+    device = await db.devices.find_one({"device_id": device_id})
+    if not device:
+        device = await db.devices.find_one({"_id": device_id})
+    if not device:
+        try:
+            from bson import ObjectId
+            device = await db.devices.find_one({"_id": ObjectId(device_id)})
+        except Exception:
+            pass
+
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+
+    actual_device_id = device.get("device_id")
+    device_obj_id = device.get("_id")
+    hostname = device.get("hostname", "Unknown Device")
+    ip_address = device.get("ip_address")
+
+    # Delete device document
+    if actual_device_id:
+        await db.devices.delete_many({"device_id": actual_device_id})
+    if device_obj_id:
+        await db.devices.delete_many({"_id": device_obj_id})
+
+    # Cascade delete all related records
+    if actual_device_id:
+        await db.logs.delete_many({"device_id": actual_device_id})
+        await db.metrics.delete_many({"device_id": actual_device_id})
+        await db.processes.delete_many({"device_id": actual_device_id})
+        await db.device_events.delete_many({"device_id": actual_device_id})
+        await db.connection_history.delete_many({"device_id": actual_device_id})
+        await db.anomalies.delete_many({"device_id": actual_device_id})
+        try:
+            await db.enrollment_tokens.update_many(
+                {"device_ids": actual_device_id},
+                {"$pull": {"device_ids": actual_device_id}}
+            )
+        except Exception:
+            pass
+
+    if ip_address:
+        await db.connection_history.delete_many({"ip_address": ip_address})
+
+    return {
+        "status": "deleted",
+        "device_id": actual_device_id or str(device_obj_id),
+        "hostname": hostname,
+        "message": f"Device '{hostname}' and all its associated monitoring records have been permanently removed."
+    }
+
+
 @router.get("/{device_id}/events")
 async def get_device_events(device_id: str, current_user: dict = Depends(get_current_user)):
     """Return audit event timeline for a device."""

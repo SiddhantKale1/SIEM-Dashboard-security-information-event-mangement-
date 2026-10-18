@@ -83,6 +83,19 @@ export default function Endpoints() {
     }
   };
 
+  const handleDeleteDevice = async (device: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const id = device.device_id || device._id;
+    const name = device.hostname || id;
+    if (!window.confirm(`Permanently remove endpoint "${name}" from monitoring?\n\nAll associated logs, telemetry, processes, anomalies, and connection history will be deleted.`)) return;
+    try {
+      await api.delete(`/devices/${id}`);
+      loadData();
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || "Failed to delete endpoint");
+    }
+  };
+
   const handleCopyCmd = async (text: string, label: string) => {
     const success = await copyToClipboard(text);
     if (success) {
@@ -289,7 +302,7 @@ export default function Endpoints() {
 
                     {/* Bottom: Action Trigger to inspect system & network logs */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         {isIsolated ? (
                           <button
                             onClick={(e) => handleRestore(dev.device_id, e)}
@@ -307,6 +320,21 @@ export default function Endpoints() {
                             <Lock size={11} /> Isolate
                           </button>
                         ) : null}
+
+                        <button
+                          onClick={(e) => handleDeleteDevice(dev, e)}
+                          className="neo-btn"
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '0.72rem',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            color: '#f87171'
+                          }}
+                          title="Delete system from monitoring"
+                        >
+                          <Trash2 size={11} />
+                        </button>
                       </div>
 
                       <button
@@ -378,16 +406,32 @@ export default function Endpoints() {
                           {dev.device_id || 'N/A'}
                         </td>
                         <td style={{ padding: '12px' }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (dev.device_id) navigate(`/devices/${dev.device_id}`);
-                            }}
-                            className="neo-btn neo-btn-cyan"
-                            style={{ padding: '4px 10px', fontSize: '0.72rem' }}
-                          >
-                            View Logs &amp; Traffic →
-                          </button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (dev.device_id) navigate(`/devices/${dev.device_id}`);
+                              }}
+                              className="neo-btn neo-btn-cyan"
+                              style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+                            >
+                              View Logs &amp; Traffic →
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteDevice(dev, e)}
+                              className="neo-btn"
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.72rem',
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#f87171'
+                              }}
+                              title="Delete endpoint from monitoring system"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

@@ -15,7 +15,8 @@ import {
   Search, 
   Layers,
   Globe,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { WindowsIcon, LinuxPenguinIcon } from '../components/OSIcons';
@@ -106,6 +107,20 @@ export default function DeviceDetails() {
       showToast(err?.response?.data?.detail || 'Restore failed.', 'error');
     } finally { 
       setActioning(false); 
+    }
+  };
+
+  const handleDeleteDevice = async () => {
+    const targetName = device?.hostname || id;
+    if (!window.confirm(`Permanently remove endpoint "${targetName}" from monitoring?\n\nThis will purge all associated logs, telemetry, processes, anomalies, and connection history from the database.`)) return;
+    setActioning(true);
+    try {
+      await api.delete(`/devices/${id}`);
+      showToast(`Device "${targetName}" deleted successfully.`);
+      navigate('/endpoints');
+    } catch (err: any) {
+      showToast(err?.response?.data?.detail || 'Failed to delete device.', 'error');
+      setActioning(false);
     }
   };
 
@@ -254,6 +269,22 @@ export default function DeviceDetails() {
                 <ShieldCheck size={14} /> {actioning ? 'Restoring...' : 'Restore Network Access'}
               </button>
             )}
+
+            <button 
+              onClick={handleDeleteDevice}
+              disabled={actioning}
+              className="neo-btn"
+              style={{
+                padding: '8px 16px',
+                fontSize: '0.78rem',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1.5px solid rgba(239, 68, 68, 0.4)',
+                color: '#f87171'
+              }}
+              title="Permanently remove this device from SIEM monitoring"
+            >
+              <Trash2 size={14} /> {actioning ? 'Deleting...' : 'Delete System'}
+            </button>
           </div>
         </div>
       </div>

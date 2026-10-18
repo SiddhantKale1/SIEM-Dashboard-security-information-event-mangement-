@@ -215,9 +215,9 @@ export default function DeviceDetails() {
                 <span>•</span>
                 <span>MAC: <strong style={{ color: '#8b5cf6' }}>{device.mac_address || 'N/A'}</strong></span>
                 <span>•</span>
-                <span>Subnet: <strong style={{ color: '#f8fafc' }}>{device.subnet || '192.168.1.0/24'}</strong></span>
+                <span>Subnet: <strong style={{ color: '#f8fafc' }}>{device.subnet || '—'}</strong></span>
                 <span>•</span>
-                <span>Agent: <strong style={{ color: '#10b981' }}>v{device.agent_version || '2.0.0'}</strong></span>
+                <span>Agent: <strong style={{ color: '#10b981' }}>{device.agent_version ? `v${device.agent_version}` : '—'}</strong></span>
               </div>
             </div>
           </div>
@@ -344,42 +344,60 @@ export default function DeviceDetails() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
-                    <th style={{ padding: '10px 12px' }}>SEVERITY</th>
-                    <th style={{ padding: '10px 12px' }}>TIMESTAMP</th>
+                    <th style={{ padding: '10px 12px' }}>STATUS</th>
+                    <th style={{ padding: '10px 12px' }}>CATEGORY</th>
+                    <th style={{ padding: '10px 12px' }}>ACTIVITY (PLAIN ENGLISH)</th>
                     <th style={{ padding: '10px 12px' }}>SOURCE</th>
-                    <th style={{ padding: '10px 12px' }}>EVENT ID</th>
-                    <th style={{ padding: '10px 12px' }}>MESSAGE</th>
+                    <th style={{ padding: '10px 12px' }}>TIMESTAMP</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSystemLogs.map((l: any, i: number) => {
+                    const isPolicy = Boolean(l.is_policy_violation);
                     const sev = (l.severity || 'info').toLowerCase();
-                    const badgeColor = sev === 'error' ? '#f43f5e' : sev === 'warning' ? '#f59e0b' : '#38bdf8';
+                    const badgeColor = isPolicy ? '#f43f5e' : sev === 'error' ? '#f43f5e' : sev === 'warning' ? '#f59e0b' : '#38bdf8';
                     return (
                       <tr 
                         key={l._id || i}
-                        style={{ borderBottom: '1px solid #161e30', fontFamily: 'JetBrains Mono, monospace' }}
+                        style={{
+                          borderBottom: '1px solid #161e30',
+                          background: isPolicy ? 'rgba(244, 63, 94, 0.05)' : 'transparent'
+                        }}
                       >
                         <td style={{ padding: '10px 12px' }}>
                           <span style={{
                             display: 'inline-block', padding: '2px 6px', borderRadius: 4,
                             fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase',
-                            background: `${badgeColor}18`, color: badgeColor, border: `1px solid ${badgeColor}40`
+                            background: isPolicy ? '#f43f5e' : `${badgeColor}18`,
+                            color: isPolicy ? '#fff' : badgeColor,
+                            border: `1px solid ${isPolicy ? '#000' : `${badgeColor}40`}`
                           }}>
-                            {sev}
+                            {isPolicy ? 'PROHIBITED' : sev}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.75rem' }}>
-                          {l.timestamp ? new Date(l.timestamp).toLocaleTimeString() : '—'}
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{
+                            fontSize: '0.72rem', fontWeight: 700,
+                            color: isPolicy ? '#f43f5e' : '#38bdf8'
+                          }}>
+                            {l.category || 'System Event'}
+                          </span>
                         </td>
-                        <td style={{ padding: '10px 12px', color: '#8b5cf6', fontWeight: 700 }}>
+                        <td style={{ padding: '10px 12px', wordBreak: 'break-word', maxWidth: 450 }}>
+                          <div style={{ color: isPolicy ? '#fca5a5' : '#f8fafc', fontWeight: 700, fontSize: '0.82rem' }}>
+                            {l.friendly_summary || l.message || 'No log details'}
+                          </div>
+                          {l.friendly_summary && l.friendly_summary !== l.message && (
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+                              {l.message}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '10px 12px', color: '#8b5cf6', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}>
                           {l.source || l.source_type || 'system'}
                         </td>
-                        <td style={{ padding: '10px 12px', color: '#cbd5e1' }}>
-                          {l.event_id || 'LOG'}
-                        </td>
-                        <td style={{ padding: '10px 12px', color: '#f8fafc', wordBreak: 'break-word', maxWidth: 500 }}>
-                          {l.message || 'No log details'}
+                        <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                          {l.timestamp ? new Date(l.timestamp).toLocaleTimeString() : '—'}
                         </td>
                       </tr>
                     );

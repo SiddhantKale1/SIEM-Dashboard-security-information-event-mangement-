@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Search, Terminal, RefreshCw, Radio } from 'lucide-react';
+import { Search, Terminal, RefreshCw, Radio, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 
-function SeverityBadge({ severity }: { severity: string }) {
+function SeverityBadge({ severity, isPolicy }: { severity: string; isPolicy?: boolean }) {
+  if (isPolicy) return <span className="neo-badge neo-badge-critical" style={{ background: '#f43f5e', color: '#fff' }}>🚫 PROHIBITED</span>;
   if (severity === 'error')   return <span className="neo-badge neo-badge-critical">ERROR</span>;
   if (severity === 'warning') return <span className="neo-badge neo-badge-medium">WARNING</span>;
   return <span className="neo-badge neo-badge-low">INFO</span>;
@@ -14,20 +15,25 @@ export default function Logs() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
   const [search, setSearch]   = useState('');
-  const [filter, setFilter]   = useState<'all' | 'error' | 'warning' | 'information'>('all');
+  const [filter, setFilter]   = useState<'all' | 'prohibited' | 'error' | 'warning' | 'information'>('all');
   const [page, setPage]       = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs]   = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
-  const fetchLogs = async (p = page, sev = filter, q = search) => {
+  const fetchLogs = async (p = page, fil = filter, q = search) => {
     setLoading(true);
     setApiError(false);
     try {
       const params: Record<string, any> = { page: p, limit: 50 };
-      if (sev !== 'all') params.severity = sev;
+      if (fil === 'prohibited') {
+        params.policy_violations_only = true;
+      } else if (fil !== 'all') {
+        params.severity = fil;
+      }
       if (q.trim()) params.search = q.trim();
+
       const r = await api.get('/logs', { params });
       setLogs(r.data.logs ?? r.data);
       setTotalPages(r.data.pages ?? 1);
@@ -66,8 +72,9 @@ export default function Logs() {
 
   const filterTabs: { key: typeof filter; label: string; color: string }[] = [
     { key: 'all',         label: `All Logs`, color: '#06b6d4' },
-    { key: 'error',       label: `Errors`,   color: '#f43f5e' },
+    { key: 'prohibited',  label: `🚫 Prohibited (YouTube/Entertainment)`, color: '#f43f5e' },
     { key: 'warning',     label: `Warnings`, color: '#f59e0b' },
+    { key: 'error',       label: `Errors`,   color: '#e11d48' },
     { key: 'information', label: `Info`,     color: '#3b82f6' },
   ];
 
@@ -79,14 +86,14 @@ export default function Logs() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h1 style={{ fontSize: '1.65rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', color: '#f8fafc' }}>
-              Real-Time Log Streamer
+              College Lab Activity &amp; Event Stream
             </h1>
             <span className="neo-badge neo-badge-cyan">
-              {totalLogs} LOGS INDEXED
+              {totalLogs} EVENTS RECORDED
             </span>
           </div>
           <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-            High-velocity event ingestion pipeline with full-text search and JSON payload inspection
+            Human-readable activity monitor: detects prohibited student browsing (YouTube, gaming), login attempts, and system events
           </p>
         </div>
 
@@ -111,7 +118,7 @@ export default function Logs() {
 
       {/* Bento Toolbar */}
       <div className="bento-card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 260 }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 280 }}>
           <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             style={{
@@ -125,7 +132,7 @@ export default function Logs() {
               outline: 'none',
               fontFamily: 'inherit'
             }}
-            placeholder="Search hostnames, event IDs, message contents (press Enter)..."
+            placeholder="Search student activity (e.g. youtube, login, hostname)..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={handleSearchSubmit}
@@ -133,7 +140,7 @@ export default function Logs() {
         </div>
 
         {/* Filter tabs */}
-        <div style={{ display: 'flex', background: '#0a0e17', border: '2px solid #1e293b', borderRadius: 8, padding: 3, gap: 4 }}>
+        <div style={{ display: 'flex', background: '#0a0e17', border: '2px solid #1e293b', borderRadius: 8, padding: 3, gap: 4, flexWrap: 'wrap' }}>
           {filterTabs.map(t => (
             <button
               key={t.key}
@@ -176,63 +183,78 @@ export default function Logs() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
             <thead>
               <tr style={{ borderBottom: '2.5px solid #1e293b', background: '#090d16', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>
-                <th style={{ padding: '10px 14px', width: 90 }}>SEVERITY</th>
-                <th style={{ padding: '10px 14px', width: 140 }}>TIMESTAMP</th>
-                <th style={{ padding: '10px 14px', width: 130 }}>HOSTNAME</th>
-                <th style={{ padding: '10px 14px', width: 110 }}>SOURCE</th>
-                <th style={{ padding: '10px 14px', width: 100 }}>EVENT ID</th>
-                <th style={{ padding: '10px 14px' }}>MESSAGE</th>
+                <th style={{ padding: '10px 14px', width: 110 }}>STATUS</th>
+                <th style={{ padding: '10px 14px', width: 160 }}>CATEGORY</th>
+                <th style={{ padding: '10px 14px' }}>WHAT HAPPENED (PLAIN ENGLISH)</th>
+                <th style={{ padding: '10px 14px', width: 130 }}>WORKSTATION</th>
+                <th style={{ padding: '10px 14px', width: 95 }}>TIME</th>
               </tr>
             </thead>
             <tbody>
               {loading && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '40px 14px', textAlign: 'center', color: '#64748b' }}>
-                    Streaming events from SIEM datastore...
+                  <td colSpan={5} style={{ padding: '40px 14px', textAlign: 'center', color: '#64748b' }}>
+                    Streaming real-time events from workstations...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '40px 14px', textAlign: 'center', color: '#475569' }}>
-                    No logs match current search/filter.
+                  <td colSpan={5} style={{ padding: '40px 14px', textAlign: 'center', color: '#475569' }}>
+                    No events match current filter.
                   </td>
                 </tr>
               ) : (
-                logs.map((log: any) => (
-                  <tr 
-                    key={log._id}
-                    onClick={() => setSelectedLog(log)}
-                    style={{
-                      borderBottom: '1px solid #141b2b',
-                      cursor: 'pointer',
-                      transition: 'background 0.1s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#0e1627'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '10px 14px' }}>
-                      <SeverityBadge severity={log.severity} />
-                    </td>
-                    <td style={{ padding: '10px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {log.timestamp ? format(new Date(log.timestamp), 'HH:mm:ss.SS') : '—'}
-                    </td>
-                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#f8fafc' }}>
-                      {log.hostname || '—'}
-                    </td>
-                    <td style={{ padding: '10px 14px', color: '#06b6d4', fontFamily: 'JetBrains Mono, monospace' }}>
-                      {log.source || 'system'}
-                    </td>
-                    <td style={{ padding: '10px 14px', color: '#c084fc', fontFamily: 'JetBrains Mono, monospace' }}>
-                      {String(log.event_id || '—')}
-                    </td>
-                    <td style={{
-                      padding: '10px 14px', color: '#cbd5e1', fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: '0.78rem', maxWidth: 450, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                    }}>
-                      {log.message || log.raw_log || '—'}
-                    </td>
-                  </tr>
-                ))
+                logs.map((log: any) => {
+                  const isPolicy = Boolean(log.is_policy_violation);
+                  return (
+                    <tr 
+                      key={log._id}
+                      onClick={() => setSelectedLog(log)}
+                      style={{
+                        borderBottom: '1px solid #141b2b',
+                        cursor: 'pointer',
+                        transition: 'background 0.1s',
+                        background: isPolicy ? 'rgba(244, 63, 94, 0.05)' : 'transparent'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = isPolicy ? 'rgba(244, 63, 94, 0.12)' : '#0e1627'}
+                      onMouseLeave={e => e.currentTarget.style.background = isPolicy ? 'rgba(244, 63, 94, 0.05)' : 'transparent'}
+                    >
+                      <td style={{ padding: '10px 14px' }}>
+                        <SeverityBadge severity={log.severity} isPolicy={isPolicy} />
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 8px',
+                          borderRadius: 6,
+                          fontSize: '0.73rem',
+                          fontWeight: 700,
+                          background: isPolicy ? 'rgba(244, 63, 94, 0.15)' : '#1e293b',
+                          color: isPolicy ? '#f43f5e' : '#38bdf8',
+                          border: isPolicy ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid #334155'
+                        }}>
+                          {log.category || 'System Event'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        <div style={{ color: isPolicy ? '#fca5a5' : '#f8fafc', fontWeight: 700, fontSize: '0.84rem' }}>
+                          {log.friendly_summary || log.message || '—'}
+                        </div>
+                        {log.friendly_summary && log.friendly_summary !== log.message && (
+                          <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+                            Technical log: {log.message}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '10px 14px', fontWeight: 700, color: '#06b6d4' }}>
+                        {log.hostname || '—'}
+                      </td>
+                      <td style={{ padding: '10px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
+                        {log.timestamp ? format(new Date(log.timestamp), 'HH:mm:ss') : '—'}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -278,7 +300,7 @@ export default function Logs() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Terminal size={18} color="#06b6d4" />
                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc' }}>
-                  Log Event Payload
+                  Workstation Event Details
                 </h3>
               </div>
               <button
@@ -290,48 +312,65 @@ export default function Logs() {
               </button>
             </div>
 
+            {selectedLog.is_policy_violation && (
+              <div style={{
+                background: 'rgba(244, 63, 94, 0.15)', border: '2px solid #f43f5e',
+                borderRadius: 8, padding: '10px 14px', marginBottom: 14,
+                display: 'flex', alignItems: 'center', gap: 10
+              }}>
+                <ShieldAlert size={18} color="#f43f5e" />
+                <div>
+                  <div style={{ color: '#f43f5e', fontWeight: 800, fontSize: '0.85rem' }}>Prohibited Activity Violation</div>
+                  <div style={{ color: '#cbd5e1', fontSize: '0.78rem' }}>
+                    This workstation accessed restricted entertainment/media content during monitoring hours.
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>HOSTNAME:</span>
+                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>WORKSTATION:</span>
                 <div style={{ fontWeight: 700, color: '#f8fafc' }}>{selectedLog.hostname}</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>SEVERITY:</span>
-                <div><SeverityBadge severity={selectedLog.severity} /></div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>SOURCE / SUBSYSTEM:</span>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', color: '#06b6d4' }}>{selectedLog.source}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>TIMESTAMP:</span>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', color: '#cbd5e1' }}>{selectedLog.timestamp}</div>
+                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>CATEGORY:</span>
+                <div style={{ fontWeight: 700, color: '#38bdf8' }}>{selectedLog.category || 'General'}</div>
               </div>
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>MESSAGE:</span>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>HUMAN-READABLE SUMMARY:</span>
               <div style={{
-                background: '#04070d', border: '1.5px solid #1e293b', borderRadius: 6,
-                padding: '10px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem',
-                color: '#f8fafc', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
+                background: '#070a11', border: '1.5px solid #1e293b',
+                borderRadius: 6, padding: '10px 12px', color: '#f8fafc',
+                fontSize: '0.88rem', fontWeight: 700, marginTop: 4
               }}>
-                {selectedLog.message}
+                {selectedLog.friendly_summary || selectedLog.message}
               </div>
             </div>
 
-            {selectedLog.raw_log && (
-              <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>RAW JSON PAYLOAD:</span>
-                <pre style={{
-                  background: '#04070d', border: '1.5px solid #1e293b', borderRadius: 6,
-                  padding: '10px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem',
-                  color: '#94a3b8', maxHeight: 160, overflowY: 'auto', whiteSpace: 'pre-wrap'
-                }}>
-                  {typeof selectedLog.raw_log === 'string' ? selectedLog.raw_log : JSON.stringify(selectedLog.raw_log, null, 2)}
-                </pre>
-              </div>
-            )}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>RAW TECHNICAL LOG:</span>
+              <pre style={{
+                background: '#05070c', border: '1.5px solid #1e293b',
+                borderRadius: 6, padding: '10px 12px', color: '#94a3b8',
+                fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace',
+                maxHeight: 180, overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '4px 0 0'
+              }}>
+                {selectedLog.raw_log || selectedLog.message}
+              </pre>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setSelectedLog(null)}
+                className="neo-btn neo-btn-cyan"
+                style={{ padding: '6px 16px', fontSize: '0.8rem' }}
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         </div>
       )}

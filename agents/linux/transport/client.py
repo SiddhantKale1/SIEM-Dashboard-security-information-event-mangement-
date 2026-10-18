@@ -33,12 +33,12 @@ class AgentClient:
         logger.info(f"Registered successfully. Device ID: {settings.device_id}")
         return True
         
-    def send_heartbeat(self):
+    def send_heartbeat(self, status="online"):
         url = f"{settings.SERVER_URL}/api/v1/agent/heartbeat"
         data = {
             "device_id": settings.device_id,
             "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-            "status": "online"
+            "status": status
         }
         response = self.session.post(url, json=data, headers=self.get_headers(), timeout=5)
         response.raise_for_status()

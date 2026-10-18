@@ -4,6 +4,8 @@ from typing import Optional
 from app.api.auth import get_current_user
 from app.database.connection import get_db
 
+from app.services.log_humanizer import humanize_log
+
 router = APIRouter(prefix="/api/v1/logs", tags=["logs"])
 
 @router.get("/stats")
@@ -69,6 +71,7 @@ async def get_logs(
     severity: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     device_id: Optional[str] = Query(None),
+    policy_violations_only: bool = Query(False, description="Filter specifically for prohibited activity (YouTube, gaming, etc.)")
 ):
     db = get_db()
     filter_: dict = {}
@@ -78,17 +81,26 @@ async def get_logs(
         filter_["device_id"] = device_id
 
     # Server-side search: fetch all severity-matched logs, filter in Python, then paginate
-    if search and search.strip():
-        q = search.strip().lower()
+    if search and search.strip() or policy_violations_only:
+        q = search.strip().lower() if search else ""
         cursor = db.logs.find(filter_).sort("timestamp", -1)
         all_logs = await cursor.to_list(length=50000)
-        matched = [
-            l for l in all_logs
-            if q in str(l.get("hostname", "")).lower()
-            or q in str(l.get("message", "")).lower()
-            or q in str(l.get("source", "")).lower()
-            or q in str(l.get("event_id", "")).lower()
-        ]
+        
+        # Humanize first so search matches both raw details and human-friendly college summaries
+        matched = []
+        for l in all_logs:
+            humanize_log(l)
+            if policy_violations_only and not l.get("is_policy_violation"):
+                continue
+            if q:
+                combined_search = (
+                    f"{l.get('hostname', '')} {l.get('message', '')} {l.get('source', '')} "
+                    f"{l.get('event_id', '')} {l.get('friendly_summary', '')} {l.get('category', '')}"
+                ).lower()
+                if q not in combined_search:
+                    continue
+            matched.append(l)
+
         total_filtered = len(matched)
         start = (page - 1) * limit
         logs = matched[start: start + limit]
@@ -96,6 +108,8 @@ async def get_logs(
         total_filtered = await db.logs.count_documents(filter_)
         cursor = db.logs.find(filter_).sort("timestamp", -1).limit(limit)
         logs = await cursor.to_list(length=limit)
+        for log in logs:
+            humanize_log(log)
 
     for log in logs:
         log["_id"] = str(log["_id"])

@@ -463,28 +463,51 @@ def collect_network_logs(device_id: str, os_name: str) -> list:
                     matched_domain = get_domain_for_ip(r_ip)
                     domain_label = f" [Domain: {matched_domain}]" if matched_domain else ""
                     
-                    # If outbound connection to web port (80, 443, 8080, 8443) with domain, emit a dedicated WEB_VISIT log!
+                    # If outbound connection to web port (80, 443, 8080, 8443) with domain, emit a dedicated WEB_VISIT or PROHIBITED_CONTENT log!
                     if r_port in (80, 443, 8080, 8443) and matched_domain and not any(nd in matched_domain for nd in _NOISE_DOMAINS):
                         web_key = (matched_domain, r_port)
                         if web_key not in _seen_web_visits or (now - _seen_web_visits[web_key] > 180):
                             _seen_web_visits[web_key] = now
+                            is_youtube = any(y in matched_domain for y in ("youtube", "googlevideo", "youtu.be", "ytimg"))
+                            is_prohibited_site = is_youtube or any(p in matched_domain for p in ("netflix", "twitch", "tiktok", "instagram", "facebook", "reddit", "discord", "roblox", "steam", "torrent"))
+                            
+                            if is_youtube:
+                                event_id = "PROHIBITED_CONTENT"
+                                severity = "warning"
+                                category = "🚫 Prohibited: YouTube"
+                                friendly_msg = f"🚫 Prohibited Activity: Student workstation accessed YouTube video streaming ({matched_domain}) via {pname}."
+                            elif is_prohibited_site:
+                                event_id = "PROHIBITED_CONTENT"
+                                severity = "warning"
+                                category = "⚠️ Policy Violation: Entertainment"
+                                friendly_msg = f"⚠️ Prohibited Activity: Student workstation accessed restricted website ({matched_domain}) via {pname}."
+                            else:
+                                event_id = "WEB_VISIT"
+                                severity = "information"
+                                category = "🌐 Web Activity"
+                                friendly_msg = f"🌐 Visited Website: https://{matched_domain} (Remote IP: {r_ip}:{r_port}, Process: {pname})"
+
                             net_logs.append({
                                 "timestamp": now_str,
                                 "device_id": device_id,
                                 "os": os_name,
                                 "source_type": "network",
                                 "source": "browser_network",
-                                "event_id": "WEB_VISIT",
-                                "event_type": "network",
-                                "severity": "information",
-                                "message": f"🌐 Visited Website: https://{matched_domain} (Remote IP: {r_ip}:{r_port}, Process: {pname})",
+                                "event_id": event_id,
+                                "event_type": "policy_violation" if is_prohibited_site else "network",
+                                "severity": severity,
+                                "category": category,
+                                "friendly_summary": friendly_msg,
+                                "is_policy_violation": is_prohibited_site,
+                                "message": friendly_msg,
                                 "raw_log": json.dumps({
                                     "domain": matched_domain,
                                     "resolved_ip": r_ip,
                                     "remote_port": r_port,
                                     "process": pname,
                                     "pid": c.pid,
-                                    "url_preview": f"https://{matched_domain}"
+                                    "url_preview": f"https://{matched_domain}",
+                                    "is_prohibited": is_prohibited_site
                                 })
                             })
 
@@ -732,13 +755,41 @@ del "%~f0" >nul
 
             time.sleep(1)
 
+    def notify_shutdown(self):
+        if not self.config.device_id:
+            return
+        try:
+            logger.info("Device stopping / agent shutting down. Notifying SIEM server (status=offline)...")
+            self.transport.post("/agent/heartbeat", {
+                "device_id": self.config.device_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "offline"
+            })
+        except Exception:
+            pass
+
 if __name__ == "__main__":
+    import signal
     agent = SIEMAgentApp()
+
+    def handle_exit(signum, frame):
+        logger.info(f"Received exit signal ({signum}). Shutting down agent...")
+        agent.notify_shutdown()
+        sys.exit(0)
+
+    try:
+        signal.signal(signal.SIGTERM, handle_exit)
+        signal.signal(signal.SIGINT, handle_exit)
+    except Exception:
+        pass
+
     try:
         agent.run()
     except KeyboardInterrupt:
         logger.info("Agent stopped by user.")
+        agent.notify_shutdown()
         sys.exit(0)
     except Exception as e:
         logger.critical(f"Fatal agent exception: {e}", exc_info=True)
+        agent.notify_shutdown()
         sys.exit(1)

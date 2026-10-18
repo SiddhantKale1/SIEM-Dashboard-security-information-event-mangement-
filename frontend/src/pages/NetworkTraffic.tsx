@@ -12,7 +12,7 @@ import api from '../services/api';
 export default function NetworkTraffic() {
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
   const [trafficData, setTrafficData] = useState<any>({
-    network: { subnet: '192.168.1.0/24', server_ip: '127.0.0.1', gateway: '192.168.1.1' },
+    network: null,
     active_devices_count: 0,
     aggregate_tx_bytes: 0,
     aggregate_rx_bytes: 0,
@@ -108,7 +108,7 @@ export default function NetworkTraffic() {
               Network Traffic & Active Systems
             </h1>
             <span className="neo-badge neo-badge-cyan">
-              SUBNET: {trafficData.network?.subnet || '192.168.1.0/24'}
+              SUBNET: {trafficData.network?.subnet || '—'}
             </span>
           </div>
           <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>

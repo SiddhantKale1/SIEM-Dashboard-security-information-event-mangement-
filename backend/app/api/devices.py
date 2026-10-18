@@ -1,11 +1,55 @@
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import json
 import re
 from app.api.auth import get_current_user
 from app.database.connection import get_db
+from app.services.log_humanizer import humanize_log
 
 router = APIRouter(prefix="/api/v1/devices", tags=["devices"])
+
+HEARTBEAT_TIMEOUT_SECONDS = 60
+
+async def evaluate_device_status(device: dict, db) -> dict:
+    if not device:
+        return device
+    curr_status = device.get("status")
+    if curr_status in ("isolated", "discovered"):
+        return device
+
+    now = datetime.now(timezone.utc)
+    recent_cutoff = now - timedelta(seconds=HEARTBEAT_TIMEOUT_SECONDS)
+    last_seen = device.get("last_seen")
+
+    is_online = False
+    if isinstance(last_seen, datetime):
+        if last_seen.tzinfo is None:
+            last_seen = last_seen.replace(tzinfo=timezone.utc)
+        is_online = (last_seen > recent_cutoff)
+    elif isinstance(last_seen, str):
+        try:
+            dt = datetime.fromisoformat(last_seen.replace("Z", "+00:00"))
+            is_online = (dt > recent_cutoff)
+        except Exception:
+            pass
+
+    expected_status = "online" if is_online else "offline"
+    if curr_status != expected_status:
+        device["status"] = expected_status
+        await db.devices.update_one(
+            {"device_id": device["device_id"]},
+            {"$set": {"status": expected_status}}
+        )
+        if expected_status == "offline":
+            await db.connection_history.update_many(
+                {"device_id": device["device_id"], "status": "active"},
+                {"$set": {
+                    "status": "closed",
+                    "disconnected_at": now,
+                    "termination_reason": "device_offline"
+                }}
+            )
+    return device
 
 @router.get("/{device_id}")
 async def get_device(device_id: str, current_user: dict = Depends(get_current_user)):
@@ -14,6 +58,7 @@ async def get_device(device_id: str, current_user: dict = Depends(get_current_us
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
 
+    device = await evaluate_device_status(device, db)
     device["_id"] = str(device["_id"])
     return device
 
@@ -97,6 +142,7 @@ async def get_device_system_logs(
     logs = await cursor.to_list(length=limit)
     for l in logs:
         l["_id"] = str(l["_id"])
+        humanize_log(l)
     return logs
 
 @router.get("/{device_id}/network-logs")
@@ -290,6 +336,9 @@ async def get_device_network_logs(
     anomalies = await anom_cursor.to_list(length=20)
     for a in anomalies:
         a["_id"] = str(a["_id"])
+
+    for nl in net_logs:
+        humanize_log(nl)
 
     return {
         "device_id": device_id,

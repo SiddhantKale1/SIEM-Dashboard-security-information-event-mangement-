@@ -91,4 +91,25 @@ def main():
         time.sleep(1)
 
 if __name__ == "__main__":
-    main()
+    import signal, sys
+    client_instance = None
+
+    def on_exit(sig, frame):
+        if client_instance:
+            try:
+                client_instance.send_heartbeat(status="offline")
+            except Exception:
+                pass
+        sys.exit(0)
+
+    try:
+        signal.signal(signal.SIGTERM, on_exit)
+        signal.signal(signal.SIGINT, on_exit)
+    except Exception:
+        pass
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.info("Linux agent stopped by user.")
+        sys.exit(0)

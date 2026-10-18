@@ -277,7 +277,7 @@ export default function Threats() {
                           padding: '2px 8px', borderRadius: 4, fontSize: '0.72rem',
                           fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, border: '1px solid rgba(56, 189, 248, 0.3)'
                         }}>
-                          IP: {incident.ip_address || '192.168.29.178'}
+                          IP: {incident.ip_address || '—'}
                         </span>
                         <span style={{
                           background: 'rgba(139, 92, 246, 0.15)', color: '#c084fc',

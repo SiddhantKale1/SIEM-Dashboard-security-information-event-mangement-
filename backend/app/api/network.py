@@ -113,6 +113,7 @@ async def get_active_network_devices(
     for d in devices:
         ip = d.get("ip_address", "")
         last_seen = d.get("last_seen")
+        curr_status = d.get("status")
         is_online = False
 
         if isinstance(last_seen, datetime):
@@ -126,28 +127,39 @@ async def get_active_network_devices(
             except Exception:
                 pass
 
-        # Only present if in current subnet AND either recent or explicitly online/isolated
-        in_subnet = NetworkManager.is_ip_in_subnet(ip, current_subnet)
+        # Sync persistent status in DB
+        if curr_status != "isolated" and curr_status != "discovered":
+            target_status = "online" if is_online else "offline"
+            if curr_status != target_status:
+                d["status"] = target_status
+                await db.devices.update_one({"_id": d["_id"]}, {"$set": {"status": target_status}})
+                if target_status == "offline" and d.get("device_id"):
+                    await db.connection_history.update_many(
+                        {"device_id": d["device_id"], "status": "active"},
+                        {"$set": {"status": "closed", "disconnected_at": now, "termination_reason": "device_offline"}}
+                    )
 
-        if in_subnet:
-            d["_id"] = str(d["_id"])
-            if isinstance(d.get("last_seen"), datetime):
-                d["last_seen"] = d["last_seen"].isoformat()
-            if isinstance(d.get("created_at"), datetime):
-                d["created_at"] = d["created_at"].isoformat()
-            if isinstance(d.get("enrolled_at"), datetime):
-                d["enrolled_at"] = d["enrolled_at"].isoformat()
+        # Dynamic current state
+        if d.get("status") == "isolated":
+            d["current_network_state"] = "isolated"
+        elif is_online:
+            d["current_network_state"] = "online"
+            d["status"] = "online"
+        else:
+            d["current_network_state"] = "offline"
+            if d.get("status") != "isolated":
+                d["status"] = "offline"
 
-            # Dynamic current state
-            if d.get("status") == "isolated":
-                d["current_network_state"] = "isolated"
-            elif is_online:
-                d["current_network_state"] = "online"
-            else:
-                d["current_network_state"] = "idle"
+        d["_id"] = str(d["_id"])
+        if isinstance(d.get("last_seen"), datetime):
+            d["last_seen"] = d["last_seen"].isoformat()
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = d["created_at"].isoformat()
+        if isinstance(d.get("enrolled_at"), datetime):
+            d["enrolled_at"] = d["enrolled_at"].isoformat()
 
-            d["subnet"] = current_subnet
-            active_list.append(d)
+        d["subnet"] = current_subnet
+        active_list.append(d)
 
     return {
         "network": net_info,

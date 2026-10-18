@@ -24,7 +24,7 @@ export default function Dashboard() {
     mitre_distribution: [] as { tactic: string; count: number }[]
   });
   const [networkInfo, setNetworkInfo] = useState<any>({
-    network: { subnet: '192.168.1.0/24', server_ip: '127.0.0.1', gateway: '192.168.1.1' },
+    network: null,
     active_devices_count: 0,
     aggregate_tx_bytes: 0,
     aggregate_rx_bytes: 0
@@ -209,7 +209,7 @@ export default function Dashboard() {
               NETWORK PULSE
             </span>
             <span style={{ fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', color: '#06b6d4', fontWeight: 700 }}>
-              {networkInfo.network?.subnet || '192.168.1.0/24'}
+              {networkInfo.network?.subnet || '—'}
             </span>
           </div>
 
@@ -230,7 +230,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#080c14', borderRadius: 6, border: '1.5px solid #1e293b' }}>
               <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Default Gateway:</span>
               <span style={{ fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#38bdf8' }}>
-                {networkInfo.network?.gateway || '192.168.1.1'}
+                {networkInfo.network?.gateway || '—'}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#080c14', borderRadius: 6, border: '1.5px solid #1e293b' }}>
@@ -344,9 +344,11 @@ export default function Dashboard() {
                   <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ color: '#06b6d4', fontWeight: 800 }}>🖥️ {anom.hostname}</span>
-                      <span style={{ color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem' }}>
-                        ({anom.ip_address || '192.168.29.178'})
-                      </span>
+                      {anom.ip_address && (
+                        <span style={{ color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem' }}>
+                          ({anom.ip_address})
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {anom.device_id && (

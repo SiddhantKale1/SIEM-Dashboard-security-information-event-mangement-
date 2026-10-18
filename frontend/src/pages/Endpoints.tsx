@@ -93,7 +93,6 @@ export default function Endpoints() {
 
   useEffect(() => {
     loadData();
-    handleGeneratePermanentToken();
     const interval = setInterval(loadData, 8000);
     return () => clearInterval(interval);
   }, []);
@@ -280,7 +279,7 @@ export default function Endpoints() {
                       </div>
                       <div>
                         <span style={{ color: '#64748b' }}>SUBNET:</span>
-                        <div style={{ color: '#cbd5e1' }}>{dev.subnet || '192.168.1.0/24'}</div>
+                        <div style={{ color: '#cbd5e1' }}>{dev.subnet || '—'}</div>
                       </div>
                       <div>
                         <span style={{ color: '#64748b' }}>MAC:</span>

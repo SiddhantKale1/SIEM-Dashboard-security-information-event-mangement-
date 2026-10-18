@@ -10,6 +10,7 @@ from app.schemas.enrollment import HeartbeatRequest
 from app.schemas.agent import LogsRequest, MetricsRequest, ProcessesRequest
 from app.services.ai_engine import AIEngine
 from app.services.network_service import NetworkManager
+from app.services.log_humanizer import humanize_log
 
 router = APIRouter(prefix="/api/v1/agent", tags=["agent"])
 logger = logging.getLogger(__name__)
@@ -27,11 +28,31 @@ async def agent_heartbeat(
     db = get_db()
     now = datetime.now(timezone.utc)
     
-    # Update device status and last_seen
+    # Handle explicit offline shutdown notification
+    if request.status == "offline":
+        await db.devices.update_one(
+            {"device_id": current_device["device_id"]},
+            {"$set": {
+                "status": "offline",
+                "last_seen": now
+            }}
+        )
+        await db.connection_history.update_many(
+            {"device_id": current_device["device_id"], "status": "active"},
+            {"$set": {
+                "status": "closed",
+                "disconnected_at": now,
+                "termination_reason": "device_shutdown"
+            }}
+        )
+        logger.info(f"Device {current_device.get('hostname')} ({current_device['device_id']}) shut down / went offline.")
+        return {"status": "offline", "server_time": now.isoformat()}
+
+    # Normal online heartbeat
     await db.devices.update_one(
         {"device_id": current_device["device_id"]},
         {"$set": {
-            "status": request.status,
+            "status": "online",
             "last_seen": now
         }}
     )
@@ -81,6 +102,12 @@ async def receive_logs(
                 log_dict["message"] = desc_match.group(1).strip()[:300]
             else:
                 log_dict["message"] = f"Windows System Event ({log_dict.get('source', 'System')}, Event ID: {log_dict.get('event_id', '1')})"
+
+        # Humanize log into plain-English college lab understandable format
+        humanize_log(log_dict)
+        if log_dict.get("is_policy_violation"):
+            log_dict["severity"] = "warning"
+            log_dict["event_type"] = "policy_violation"
 
         logs_to_insert.append(log_dict)
 

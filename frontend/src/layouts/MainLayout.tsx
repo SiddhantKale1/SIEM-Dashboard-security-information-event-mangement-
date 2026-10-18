@@ -24,7 +24,7 @@ export default function MainLayout() {
     try {
       const [threatsRes, trafficRes] = await Promise.all([
         api.get('/anomalies/stats').catch(() => ({ data: { active_threats: 0 } })),
-        api.get('/network/traffic').catch(() => ({ data: { active_devices_count: 0, network: { subnet: '192.168.1.0/24' } } }))
+        api.get('/network/traffic').catch(() => ({ data: { active_devices_count: 0, network: null } }))
       ]);
       setActiveThreats(threatsRes.data.active_threats || 0);
       setActiveNetworkInfo({
@@ -128,7 +128,7 @@ export default function MainLayout() {
             }} className="pulse-dot" />
           </div>
           <div style={{ fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', color: '#06b6d4', fontWeight: 700 }}>
-            {activeNetworkInfo.subnet || '192.168.1.0/24'}
+            {activeNetworkInfo.subnet || '—'}
           </div>
         </div>
 

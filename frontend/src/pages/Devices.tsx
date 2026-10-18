@@ -97,7 +97,8 @@ export default function Devices() {
   };
 
   const copyCmd = async () => {
-    const cmd = `export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="http://127.0.0.1:8000" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`;
+    const sUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://127.0.0.1:8000';
+    const cmd = `export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="${sUrl}" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`;
     const success = await copyToClipboard(cmd);
     if (success) {
       setCopied(true);

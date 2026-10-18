@@ -29,10 +29,11 @@ def hash_enrollment_token(token: str) -> str:
 async def create_enrollment_token(
     reusable: bool = Query(True, description="Allow token to be used on multiple endpoint PCs"),
     days_valid: int = Query(30, ge=1, le=365),
+    specific_token: Optional[str] = Query(None, description="Optional custom or pre-existing token string"),
     current_user: dict = Depends(get_current_user)
 ):
     db = get_db()
-    token = generate_enrollment_token()
+    token = specific_token.strip() if specific_token else generate_enrollment_token()
     token_hash = hash_enrollment_token(token)
     expires_at = datetime.now(timezone.utc) + timedelta(days=days_valid)
     net_info = NetworkManager.get_local_network_info()
@@ -125,7 +126,7 @@ async def register_device(request: DeviceRegistrationRequest):
                     break
             
     if not valid_token_doc:
-        logger.warning(f"Failed enrollment attempt from {request.ip_address} - Invalid or expired token")
+        logger.warning(f"Failed enrollment attempt from {request.ip_address} with token '{request.token}' - Invalid or expired token")
         raise HTTPException(status_code=400, detail="Invalid or expired enrollment token")
 
     # Generate or reuse permanent device ID (avoiding duplicate records for same MAC)

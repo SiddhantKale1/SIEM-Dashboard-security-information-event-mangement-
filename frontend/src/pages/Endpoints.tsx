@@ -12,11 +12,13 @@ import {
   Terminal,
   ArrowRight,
   RefreshCw,
-  Search
+  Search,
+  ShieldAlert
 } from 'lucide-react';
 import api from '../services/api';
 import { copyToClipboard } from '../utils/clipboard';
 import { WindowsIcon, LinuxPenguinIcon } from '../components/OSIcons';
+import LabPolicyManager from '../components/LabPolicyManager';
 
 export default function Endpoints() {
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export default function Endpoints() {
   const [activeInstallCommands, setActiveInstallCommands] = useState<{ linux: string; windows: string } | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
   const [generatingToken, setGeneratingToken] = useState(false);
-  const [activeTab, setActiveTab] = useState<'view_devices' | 'installers'>('view_devices');
+  const [activeTab, setActiveTab] = useState<'view_devices' | 'installers' | 'policies'>('view_devices');
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadData = async () => {
@@ -176,6 +178,14 @@ export default function Endpoints() {
           style={{ padding: '8px 16px', fontSize: '0.82rem', background: activeTab !== 'installers' ? '#0a0f1b' : undefined }}
         >
           <Terminal size={15} /> 1-Click Installers (Linux &amp; Windows)
+        </button>
+
+        <button
+          onClick={() => setActiveTab('policies')}
+          className={`neo-btn ${activeTab === 'policies' ? 'neo-btn-coral' : ''}`}
+          style={{ padding: '8px 16px', fontSize: '0.82rem', background: activeTab !== 'policies' ? '#0a0f1b' : undefined }}
+        >
+          <ShieldAlert size={15} /> 🛡️ Lab Policies &amp; Website Blocker
         </button>
       </div>
 
@@ -582,6 +592,11 @@ export default function Endpoints() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── OPTION 3: LAB POLICIES & CONTENT BLOCKER ── */}
+      {activeTab === 'policies' && (
+        <LabPolicyManager />
       )}
     </div>
   );

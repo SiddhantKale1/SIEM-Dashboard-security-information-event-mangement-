@@ -24,7 +24,10 @@ class _MongitaWrapper:
         return _MongitaCollectionWrapper(getattr(self._db, name))
 
     def close(self):
-        pass  # mongita has no explicit close
+        try:
+            self._client.close()
+        except Exception:
+            pass
 
 
 class _MongitaCollectionWrapper:

@@ -30,6 +30,7 @@ from app.api.network import router as network_router
 from app.api.devices import router as devices_router
 from app.api.logs import router as logs_router
 from app.api.anomalies import router as anomalies_router
+from app.api.policies import router as policies_router
 
 app.include_router(auth_router)
 app.include_router(enrollment_router)
@@ -38,6 +39,7 @@ app.include_router(network_router)
 app.include_router(devices_router)
 app.include_router(logs_router)
 app.include_router(anomalies_router)
+app.include_router(policies_router)
 
 # CORS middleware — support localhost, 127.0.0.1, and all local private network IPs
 app.add_middleware(

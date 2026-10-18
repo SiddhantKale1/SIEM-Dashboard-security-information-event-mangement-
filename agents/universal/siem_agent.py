@@ -17,9 +17,12 @@ import logging
 import subprocess
 import re
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import urllib.request
 import urllib.error
+import threading
+import http.server
+import socketserver
 
 # Setup logging
 logging.basicConfig(
@@ -133,6 +136,199 @@ class HTTPTransport:
                     pass
         except Exception as e:
             logger.warning(f"Connection failure to {url}: {e}")
+        return None
+
+# --- SIEM Lab Content Blocking & Policy Enforcement ---
+SIEM_BLOCK_HEADER = "# --- SIEM MANAGED LAB POLICIES START ---"
+SIEM_BLOCK_FOOTER = "# --- SIEM MANAGED LAB POLICIES END ---"
+
+def get_hosts_file_path() -> str:
+    if platform.system() == "Windows":
+        sys_root = os.environ.get("SystemRoot", "C:\\Windows")
+        return os.path.join(sys_root, "System32", "drivers", "etc", "hosts")
+    return "/etc/hosts"
+
+def flush_dns_cache():
+    try:
+        if platform.system() == "Windows":
+            subprocess.run(["ipconfig", "/flushdns"], capture_output=True, timeout=5)
+        else:
+            if os.path.exists("/usr/bin/resolvectl"):
+                subprocess.run(["resolvectl", "flush-caches"], capture_output=True, timeout=5)
+            elif os.path.exists("/usr/bin/systemd-resolve"):
+                subprocess.run(["systemd-resolve", "--flush-caches"], capture_output=True, timeout=5)
+            if os.path.exists("/usr/sbin/nscd") or os.path.exists("/usr/bin/nscd"):
+                subprocess.run(["nscd", "-i", "hosts"], capture_output=True, timeout=5)
+    except Exception as e:
+        logger.debug(f"DNS flush warning: {e}")
+
+def apply_domain_blocks(blocked_domains: List[str]) -> bool:
+    hosts_path = get_hosts_file_path()
+    if not os.path.exists(hosts_path):
+        logger.warning(f"Hosts file not found at {hosts_path}")
+        return False
+
+    try:
+        with open(hosts_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+
+        if SIEM_BLOCK_HEADER in content and SIEM_BLOCK_FOOTER in content:
+            pre = content.split(SIEM_BLOCK_HEADER)[0]
+            post = content.split(SIEM_BLOCK_FOOTER)[1]
+            base_content = pre.rstrip() + "\n" + post.lstrip()
+        else:
+            base_content = content.rstrip() + "\n"
+
+        backup_path = f"{hosts_path}.siem_backup"
+        if not os.path.exists(backup_path):
+            try:
+                with open(backup_path, "w", encoding="utf-8") as bf:
+                    bf.write(content)
+                logger.info(f"Created hosts backup at {backup_path}")
+            except Exception as be:
+                logger.warning(f"Could not write backup hosts file: {be}")
+
+        if blocked_domains:
+            block_lines = [
+                "",
+                SIEM_BLOCK_HEADER,
+                "# Policy Enforced by SIEM Administrator (Prohibited Lab Websites)",
+            ]
+            for domain in sorted(set(blocked_domains)):
+                d = domain.strip().lower()
+                if d:
+                    block_lines.append(f"0.0.0.0 {d}")
+                    block_lines.append(f"127.0.0.1 {d}")
+            block_lines.append(SIEM_BLOCK_FOOTER)
+            block_lines.append("")
+            new_content = base_content.rstrip() + "\n" + "\n".join(block_lines)
+        else:
+            new_content = base_content.rstrip() + "\n"
+
+        if new_content == content:
+            return True
+
+        with open(hosts_path, "w", encoding="utf-8") as f:
+            f.write(new_content)
+
+        logger.info(f"[+] Successfully enforced {len(blocked_domains)} blocked domains in {hosts_path}")
+        flush_dns_cache()
+        return True
+    except PermissionError:
+        logger.warning(f"Permission denied modifying {hosts_path}. SIEM agent requires root/admin privileges to enforce website blocking.")
+        return False
+    except Exception as e:
+        logger.error(f"Error updating {hosts_path}: {e}")
+        return False
+
+BLOCK_PAGE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Restricted - Lab Security Policy</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #090d16;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #ef4444;
+      box-shadow: 0 25px 50px -12px rgba(239, 68, 68, 0.35);
+      border-radius: 20px;
+      max-width: 540px;
+      width: 100%;
+      padding: 40px 32px;
+      text-align: center;
+    }
+    .shield-icon {
+      width: 68px;
+      height: 68px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 2px solid #ef4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+    }
+    h1 { font-size: 24px; color: #f87171; font-weight: 800; margin-bottom: 12px; }
+    p { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+    .badge {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fca5a5;
+      font-family: monospace;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+    .footer { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="shield-icon">🚫</div>
+    <h1>ACCESS PROHIBITED</h1>
+    <p>Access to this service or website has been restricted on this workstation by the <strong>College Lab Administrator</strong>.</p>
+    <div class="badge">Policy Violation Intercepted</div>
+    <div class="footer">SIEM Endpoint Protection & Policy Enforcement</div>
+  </div>
+</body>
+</html>
+"""
+
+class BlockPageHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        host = self.headers.get('Host', 'prohibited-site')
+        logger.info(f"Intercepted and blocked HTTP connection to: {host}")
+        if hasattr(self.server, 'agent_ref') and self.server.agent_ref:
+            try:
+                self.server.agent_ref.log_buffer.append({
+                    "device_id": self.server.agent_ref.config.device_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "os": self.server.agent_ref.os_name,
+                    "source_type": "security",
+                    "source": "policy_enforcer",
+                    "event_type": "policy_violation",
+                    "severity": "high",
+                    "facility": "security",
+                    "event_id": "POLICY_BLOCKED",
+                    "message": f"Blocked prohibited access attempt to: {host} (enforced by Lab Policy)",
+                    "raw_log": f"Host={host} Path={self.path} Client={self.client_address[0]}"
+                })
+            except Exception:
+                pass
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.end_headers()
+        self.wfile.write(BLOCK_PAGE_HTML.encode('utf-8'))
+
+    def log_message(self, format, *args):
+        pass
+
+def start_blockpage_server(agent_instance) -> Optional[threading.Thread]:
+    try:
+        server = socketserver.TCPServer(('127.0.0.1', 80), BlockPageHandler)
+        server.agent_ref = agent_instance
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        logger.info("[+] SIEM local Block Page Server active on 127.0.0.1:80")
+        return thread
+    except Exception as e:
+        logger.debug(f"Local block page server could not bind to port 80 ({e}). Using 0.0.0.0 sinkhole.")
         return None
 
 def collect_telemetry(device_id: str) -> dict:
@@ -612,6 +808,8 @@ class SIEMAgentApp:
         self.current_ip = get_ip_address()
         self.mac = get_mac_address()
         self.log_buffer = []
+        self.current_blocked_domains: List[str] = []
+        self.block_server = start_blockpage_server(self)
 
     def enroll_if_needed(self) -> bool:
         if self.config.device_id and self.config.device_credential:
@@ -724,6 +922,13 @@ del "%~f0" >nul
                 })
                 if res:
                     last_heartbeat = now
+                    # Synchronize content blocking policies from SIEM server
+                    if "policies" in res:
+                        incoming = res["policies"].get("blocked_domains", [])
+                        if set(incoming) != set(self.current_blocked_domains):
+                            logger.info(f"Policy update received from SIEM server: {len(incoming)} domains to block.")
+                            if apply_domain_blocks(incoming):
+                                self.current_blocked_domains = incoming
                 else:
                     logger.warning("Heartbeat failed, server unreachable.")
 

@@ -76,19 +76,17 @@ async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm
     # In a real system we'd have a seed script. For MVP, if no admin exists, create one on first login attempt if it matches a hardcoded default, or just always check the DB.
     user = await db.users.find_one({"username": form_data.username})
     
-    # Seed admin if DB is empty for MVP simplicity
+    # Seed admin if DB user does not exist
     if not user and form_data.username == "admin":
-        count = await db.users.count_documents({})
-        if count == 0:
-            user = {
-                "username": "admin",
-                "password_hash": get_password_hash("admin"),
-                "role": "admin",
-                "must_change_password": True,   # Force change on first login
-                "created_at": datetime.now(timezone.utc),
-                "last_login": None
-            }
-            await db.users.insert_one(user)
+        user = {
+            "username": "admin",
+            "password_hash": get_password_hash("admin"),
+            "role": "admin",
+            "must_change_password": False,
+            "created_at": datetime.now(timezone.utc),
+            "last_login": None
+        }
+        await db.users.insert_one(user)
 
     if not user or not verify_password(form_data.password, user["password_hash"]):
         raise HTTPException(

@@ -1,3 +1,4 @@
+import os
 import secrets
 import string
 import uuid
@@ -307,7 +308,10 @@ chmod 700 "$CONFIG_DIR"
 
 # Download the universal agent code
 echo "[*] Downloading SIEM Universal Agent..."
-curl -sSL "$SERVER_URL/api/v1/enrollment/agent.py" -o "$AGENT_DIR/siem_agent.py"
+if ! curl -sSLf "$SERVER_URL/api/v1/enrollment/agent.py" -o "$AGENT_DIR/siem_agent.py"; then
+    echo "[!] ERROR: Failed to download SIEM Universal Agent from $SERVER_URL" >&2
+    exit 1
+fi
 chmod 755 "$AGENT_DIR/siem_agent.py"
 
 # Write initial bootstrapping config
@@ -396,7 +400,20 @@ $Config | Set-Content -Path "$InstallDir\\agent_config.json"
 # Download universal agent
 Write-Host "[*] Fetching SIEM Agent code from $ServerUrl..." -ForegroundColor Cyan
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest -Uri "$ServerUrl/api/v1/enrollment/agent.py" -OutFile "$InstallDir\\siem_agent.py" -UseBasicParsing
+try {{
+    Invoke-WebRequest -Uri "$ServerUrl/api/v1/enrollment/agent.py" -OutFile "$InstallDir\\siem_agent.py" -UseBasicParsing -ErrorAction Stop
+}} catch {{
+    Write-Host "[!] ERROR: Failed to download SIEM Agent from $ServerUrl" -ForegroundColor Red
+    Write-Host "[!] Details: $_" -ForegroundColor Red
+    exit 1
+}}
+
+$agentHeader = Get-Content -Path "$InstallDir\\siem_agent.py" -TotalCount 5 -ErrorAction SilentlyContinue | Out-String
+if ($agentHeader -match '"detail":' -or (Get-Item "$InstallDir\\siem_agent.py").Length -lt 200) {{
+    Write-Host "[!] ERROR: Downloaded agent file is invalid or returned an API error:" -ForegroundColor Red
+    Write-Host $agentHeader -ForegroundColor Yellow
+    exit 1
+}}
 
 # Create launcher vbs script for silent headless execution (no window popups)
 $VbsLauncher = @"
@@ -432,10 +449,23 @@ Write-Host "[+] You may safely close this PowerShell window." -ForegroundColor G
 async def serve_universal_agent():
     """
     Serves the universal, resilient Python endpoint agent.
+    Dynamically locates siem_agent.py across environments.
     """
-    agent_path = "/home/sidd/SIEM/agents/universal/siem_agent.py"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate_paths = [
+        os.path.abspath(os.path.join(current_dir, "..", "..", "..", "agents", "universal", "siem_agent.py")),
+        os.path.abspath(os.path.join(current_dir, "..", "..", "agents", "universal", "siem_agent.py")),
+        os.path.join(os.getcwd(), "agents", "universal", "siem_agent.py"),
+        os.path.join(os.getcwd(), "..", "agents", "universal", "siem_agent.py"),
+        "/home/sidd/SIEM/agents/universal/siem_agent.py"
+    ]
+    agent_path = next((p for p in candidate_paths if os.path.isfile(p)), None)
+    if not agent_path:
+        logger.error(f"Failed to find siem_agent.py in candidate paths: {candidate_paths}")
+        raise HTTPException(status_code=500, detail=f"Failed to read agent source: file not found in {candidate_paths}")
+
     try:
-        with open(agent_path, "r") as f:
+        with open(agent_path, "r", encoding="utf-8") as f:
             content = f.read()
         return Response(content=content, media_type="text/x-python")
     except Exception as e:

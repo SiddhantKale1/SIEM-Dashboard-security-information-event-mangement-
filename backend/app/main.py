@@ -65,5 +65,6 @@ async def root():
     return {"message": "SIEM MVP API is running"}
 
 @app.get("/health")
+@app.get("/api/v1/health")
 async def health():
     return {"status": "ok", "version": "1.0.0"}

@@ -22,6 +22,15 @@ async def test_full_system_api_flow():
         assert res.status_code == 200
         assert res.json()["status"] == "ok"
 
+        res_v1 = await client.get("/api/v1/health")
+        assert res_v1.status_code == 200
+        assert res_v1.json()["status"] == "ok"
+
+        # 1b. Universal agent download
+        agent_res = await client.get("/api/v1/enrollment/agent.py")
+        assert agent_res.status_code == 200
+        assert len(agent_res.content) > 1000
+
         # 2. Login as admin
         login_res = await client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin"})
         assert login_res.status_code == 200

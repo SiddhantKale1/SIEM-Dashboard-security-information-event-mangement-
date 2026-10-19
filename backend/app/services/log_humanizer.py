@@ -53,10 +53,11 @@ def humanize_log(log: Dict[str, Any]) -> Dict[str, Any]:
     is_policy_violation = False
     policy_detail = None
 
+    is_prohibited, service_name, service_desc = detect_prohibited_content(combined)
+
     # 0. Intercepted / Blocked Prohibited Access
     if "blocked prohibited access" in combined or "blocked attempt to access" in combined or "policy enforced" in combined or "blocked access attempt" in combined:
         is_policy_violation = True
-        is_prohibited, service_name, service_desc = detect_prohibited_content(combined)
         name = service_name if is_prohibited else "restricted site"
         category = "🛑 Policy Blocked"
         summary = f"Access Intercepted & Blocked: Workstation attempted to access prohibited destination '{name}'. Enforced by Lab Policy."

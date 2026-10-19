@@ -24,6 +24,8 @@ export default function Devices() {
   const [copied, setCopied]           = useState(false);
   const [actionDeviceId, setActionDeviceId] = useState<string | null>(null);
   const [toast, setToast]             = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [osTab, setOsTab]             = useState<'windows' | 'linux'>('windows');
+  const [installCommands, setInstallCommands] = useState<{ windows?: string; linux?: string }>({});
 
   const fetchTokens = async () => {
     try {
@@ -52,6 +54,9 @@ export default function Devices() {
     try {
       const res = await api.post('/enrollment/token');
       setEnrollToken(res.data.token);
+      if (res.data.install_commands) {
+        setInstallCommands(res.data.install_commands);
+      }
       fetchTokens();
       invalidate();
     } catch (err) { console.error(err); }
@@ -111,9 +116,20 @@ export default function Devices() {
     }
   };
 
+  const getServerUrl = () => {
+    return typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://127.0.0.1:8000';
+  };
+
+  const getCommand = (os: 'windows' | 'linux') => {
+    const sUrl = getServerUrl();
+    if (os === 'windows') {
+      return installCommands.windows || `powershell -ExecutionPolicy Bypass -Command "irm '${sUrl}/api/v1/enrollment/install.ps1?token=${enrollToken}&server=${sUrl}' | iex"`;
+    }
+    return installCommands.linux || `curl -sSL "${sUrl}/api/v1/enrollment/install.sh" | sudo bash -s -- --server "${sUrl}" --token "${enrollToken}"`;
+  };
+
   const copyCmd = async () => {
-    const sUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://127.0.0.1:8000';
-    const cmd = `export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="${sUrl}" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`;
+    const cmd = getCommand(osTab);
     const success = await copyToClipboard(cmd);
     if (success) {
       setCopied(true);
@@ -180,12 +196,40 @@ export default function Devices() {
             <span className="token-display">{enrollToken}</span>
           </div>
 
+          {/* OS Selector Tabs */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <button
+              onClick={() => setOsTab('windows')}
+              style={{
+                padding: '6px 14px', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer',
+                background: osTab === 'windows' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 37, 53, 0.5)',
+                color: osTab === 'windows' ? '#60a5fa' : '#94a3b8',
+                border: osTab === 'windows' ? '1px solid #3b82f6' : '1px solid var(--color-dark-border)',
+                fontWeight: osTab === 'windows' ? 600 : 400
+              }}
+            >
+              Windows (PowerShell)
+            </button>
+            <button
+              onClick={() => setOsTab('linux')}
+              style={{
+                padding: '6px 14px', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer',
+                background: osTab === 'linux' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 37, 53, 0.5)',
+                color: osTab === 'linux' ? '#60a5fa' : '#94a3b8',
+                border: osTab === 'linux' ? '1px solid #3b82f6' : '1px solid var(--color-dark-border)',
+                fontWeight: osTab === 'linux' ? 600 : 400
+              }}
+            >
+              Linux (Bash)
+            </button>
+          </div>
+
           <p style={{ color: '#475569', fontSize: '0.8rem', margin: '0 0 8px', fontWeight: 500 }}>
-            Run on the target Linux machine:
+            Run in an administrative {osTab === 'windows' ? 'PowerShell' : 'terminal'} on the target machine:
           </p>
           <div style={{ position: 'relative' }}>
-            <div className="code-block">
-              {`export ENROLLMENT_TOKEN="${enrollToken}" && export SERVER_URL="http://127.0.0.1:8000" && cd /home/sidd/SIEM/agents/linux && rm -f agent_config.json && python agent.py`}
+            <div className="code-block" style={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap', paddingRight: 80 }}>
+              {getCommand(osTab)}
             </div>
             <button
               onClick={copyCmd}

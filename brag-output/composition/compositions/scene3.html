@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f4f5f7;
+      }
+      #scene-3 {
+        width: 1920px;
+        height: 1080px;
+        background: #f4f5f7;
+        padding: 60px 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .alert-modal {
+        width: 1200px;
+        background: #ffffff;
+        border-radius: 32px;
+        border: 2px solid #ef4444;
+        box-shadow: 0 25px 60px rgba(239, 68, 68, 0.2);
+        overflow: hidden;
+      }
+      .alert-top {
+        background: #dc2626;
+        color: #ffffff;
+        padding: 24px 36px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .alert-badge {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .alert-body {
+        padding: 44px 50px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+      .threat-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .threat-name {
+        font-size: 38px;
+        font-weight: 900;
+        color: #0b0f19;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+      .threat-mitre {
+        display: inline-block;
+        background: #fee2e2;
+        color: #991b1b;
+        font-weight: 800;
+        font-size: 15px;
+        padding: 6px 14px;
+        border-radius: 8px;
+      }
+      .severity-pill {
+        background: #dc2626;
+        color: #ffffff;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 900;
+      }
+      .threat-details-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 24px 30px;
+      }
+      .detail-box label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 6px;
+        letter-spacing: 0.05em;
+      }
+      .detail-box span {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0b0f19;
+      }
+      .action-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        border-radius: 18px;
+        padding: 20px 28px;
+      }
+      #btn-isolate {
+        background: #0b0f19;
+        color: #ffffff;
+        padding: 14px 28px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="scene-3"
+      data-composition-id="scene3"
+      data-start="0"
+      data-duration="5.0"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="alert-modal" id="s3-modal">
+        <div class="alert-top" data-layout-ignore="true">
+          <div class="alert-badge">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            CRITICAL INCIDENT DETECTED
+          </div>
+          <div style="font-weight: 700; font-size: 16px;">EVENT ID: SEC-7890-B8A4</div>
+        </div>
+
+        <div class="alert-body">
+          <div class="threat-main">
+            <div>
+              <div class="threat-name">Distributed SSH Brute-Force Attack</div>
+              <div class="threat-mitre" data-layout-ignore="true">MITRE ATT&CK T1110 • CREDENTIAL ACCESS</div>
+            </div>
+            <div class="severity-pill" data-layout-ignore="true">SEVERITY 9.4 / 10</div>
+          </div>
+
+          <div class="threat-details-grid" data-layout-ignore="true">
+            <div class="detail-box">
+              <label>Compromised Endpoint</label>
+              <span>PRIMARY-SOC-SRV</span>
+            </div>
+            <div class="detail-box">
+              <label>Target Internal IP</label>
+              <span style="color: #b91c1c;">192.168.1.105</span>
+            </div>
+            <div class="detail-box">
+              <label>Failed Auth Bursts</label>
+              <span style="color: #b91c1c;">6,400 attempts / min</span>
+            </div>
+          </div>
+
+          <div class="action-banner">
+            <div>
+              <div style="font-weight: 800; color: #881337; font-size: 22px;">Automated Security Policy Triggered</div>
+              <div style="font-weight: 600; color: #9f1239; font-size: 16px; margin-top: 2px;" data-layout-ignore="true">Host isolation recommended to prevent lateral subnet movement.</div>
+            </div>
+            <div id="btn-isolate" data-layout-ignore="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              ISOLATE HOST NOW
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo("#s3-modal", { opacity: 0, scale: 0.88, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power4.out" }, 0.1);
+      tl.fromTo("#btn-isolate", { scale: 0.95 }, { scale: 1.05, duration: 0.3, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.5);
+      tl.to("#btn-isolate", { backgroundColor: "#dc2626", duration: 0.2 }, 4.3);
+      tl.to("#scene-3", { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.7);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene3"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -174,11 +174,11 @@ export default function DeviceDetails() {
       {toast && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 9999,
-          background: toast.type === 'success' ? '#0f291e' : '#2d1217',
+          background: toast.type === 'success' ? '#dcfce7' : '#fee2e2',
           border: `2px solid ${toast.type === 'success' ? '#10b981' : '#f43f5e'}`,
-          color: toast.type === 'success' ? '#10b981' : '#f43f5e',
+          color: toast.type === 'success' ? '#166534' : '#991b1b',
           padding: '12px 20px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 700,
-          boxShadow: '4px 4px 0px #020408',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
           fontFamily: 'JetBrains Mono, monospace'
         }}>
           {toast.msg}
@@ -192,7 +192,7 @@ export default function DeviceDetails() {
             <button
               onClick={() => navigate('/endpoints')}
               className="neo-btn"
-              style={{ width: 38, height: 38, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1b' }}
+              style={{ width: 38, height: 38, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}
               title="Back to Fleet"
             >
               <ArrowLeft size={16} />
@@ -201,19 +201,19 @@ export default function DeviceDetails() {
             {/* Computer Icon + OS Badge */}
             <div style={{
               width: 50, height: 50, borderRadius: 10,
-              background: '#070a11', border: '2px solid #1e293b',
+              background: '#f9fafb', border: '1px solid #e5e7eb',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               position: 'relative'
             }}>
               <Monitor size={26} color="#06b6d4" />
-              <div style={{ position: 'absolute', bottom: -4, right: -4, background: '#070a11', borderRadius: '50%', padding: 2, border: '1px solid #1e293b' }}>
+              <div style={{ position: 'absolute', bottom: -4, right: -4, background: '#f9fafb', borderRadius: '50%', padding: 2, border: '1px solid #1e293b' }}>
                 {isWindows ? <WindowsIcon size={16} /> : isLinux ? <LinuxPenguinIcon size={16} /> : null}
               </div>
             </div>
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#111827', letterSpacing: '-0.02em' }}>
                   {device.hostname || 'Unknown Endpoint'}
                 </h1>
                 
@@ -239,7 +239,7 @@ export default function DeviceDetails() {
                 <span>•</span>
                 <span>MAC: <strong style={{ color: '#8b5cf6' }}>{device.mac_address || 'N/A'}</strong></span>
                 <span>•</span>
-                <span>Subnet: <strong style={{ color: '#f8fafc' }}>{device.subnet || '—'}</strong></span>
+                <span>Subnet: <strong style={{ color: '#111827' }}>{device.subnet || '—'}</strong></span>
                 <span>•</span>
                 <span>Agent: <strong style={{ color: '#10b981' }}>{device.agent_version ? `v${device.agent_version}` : '—'}</strong></span>
               </div>
@@ -251,7 +251,7 @@ export default function DeviceDetails() {
             <button 
               onClick={loadAllDeviceData}
               className="neo-btn" 
-              style={{ padding: '8px 14px', fontSize: '0.78rem', background: '#0a0f1b' }}
+              style={{ padding: '8px 14px', fontSize: '0.78rem', background: '#ffffff' }}
               title="Refresh Telemetry"
             >
               <RefreshCw size={14} /> Refresh
@@ -299,37 +299,69 @@ export default function DeviceDetails() {
       </div>
 
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: 10, borderBottom: '2px solid #161e30', paddingBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid #e5e7eb', paddingBottom: 10, flexWrap: 'wrap' }}>
         <button
           onClick={() => setActiveTab('system_logs')}
-          className={`neo-btn ${activeTab === 'system_logs' ? 'neo-btn-cyan' : ''}`}
-          style={{ padding: '8px 16px', fontSize: '0.8rem', background: activeTab !== 'system_logs' ? '#0a0f1b' : undefined }}
+          className="neo-btn"
+          style={{
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            background: activeTab === 'system_logs' ? '#111827' : '#ffffff',
+            color: activeTab === 'system_logs' ? '#ffffff' : '#374151',
+            borderColor: activeTab === 'system_logs' ? '#111827' : '#e5e7eb',
+            fontWeight: activeTab === 'system_logs' ? 700 : 600,
+            boxShadow: activeTab === 'system_logs' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.02)'
+          }}
         >
-          <Terminal size={14} /> System Logs ({systemLogs.length})
+          <Terminal size={14} color={activeTab === 'system_logs' ? '#82c341' : '#6b7280'} /> System Logs ({systemLogs.length})
         </button>
 
         <button
           onClick={() => setActiveTab('network_logs')}
-          className={`neo-btn ${activeTab === 'network_logs' ? 'neo-btn-violet' : ''}`}
-          style={{ padding: '8px 16px', fontSize: '0.8rem', background: activeTab !== 'network_logs' ? '#0a0f1b' : undefined }}
+          className="neo-btn"
+          style={{
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            background: activeTab === 'network_logs' ? '#111827' : '#ffffff',
+            color: activeTab === 'network_logs' ? '#ffffff' : '#374151',
+            borderColor: activeTab === 'network_logs' ? '#111827' : '#e5e7eb',
+            fontWeight: activeTab === 'network_logs' ? 700 : 600,
+            boxShadow: activeTab === 'network_logs' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.02)'
+          }}
         >
-          <Radio size={14} /> Network Logs &amp; Activity ({networkData.network_logs?.length || 0})
+          <Radio size={14} color={activeTab === 'network_logs' ? '#82c341' : '#6b7280'} /> Network Logs &amp; Activity ({networkData.network_logs?.length || 0})
         </button>
 
         <button
           onClick={() => setActiveTab('telemetry')}
-          className={`neo-btn ${activeTab === 'telemetry' ? 'neo-btn-emerald' : ''}`}
-          style={{ padding: '8px 16px', fontSize: '0.8rem', background: activeTab !== 'telemetry' ? '#0a0f1b' : undefined }}
+          className="neo-btn"
+          style={{
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            background: activeTab === 'telemetry' ? '#111827' : '#ffffff',
+            color: activeTab === 'telemetry' ? '#ffffff' : '#374151',
+            borderColor: activeTab === 'telemetry' ? '#111827' : '#e5e7eb',
+            fontWeight: activeTab === 'telemetry' ? 700 : 600,
+            boxShadow: activeTab === 'telemetry' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.02)'
+          }}
         >
-          <Activity size={14} /> Live Telemetry &amp; Processes ({processes.length})
+          <Activity size={14} color={activeTab === 'telemetry' ? '#82c341' : '#6b7280'} /> Live Telemetry &amp; Processes ({processes.length})
         </button>
 
         <button
           onClick={() => setActiveTab('timeline')}
-          className={`neo-btn ${activeTab === 'timeline' ? 'neo-btn-cyan' : ''}`}
-          style={{ padding: '8px 16px', fontSize: '0.8rem', background: activeTab !== 'timeline' ? '#0a0f1b' : undefined }}
+          className="neo-btn"
+          style={{
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            background: activeTab === 'timeline' ? '#111827' : '#ffffff',
+            color: activeTab === 'timeline' ? '#ffffff' : '#374151',
+            borderColor: activeTab === 'timeline' ? '#111827' : '#e5e7eb',
+            fontWeight: activeTab === 'timeline' ? 700 : 600,
+            boxShadow: activeTab === 'timeline' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.02)'
+          }}
         >
-          <Layers size={14} /> Audit Timeline ({events.length})
+          <Layers size={14} color={activeTab === 'timeline' ? '#82c341' : '#6b7280'} /> Audit Timeline ({events.length})
         </button>
       </div>
 
@@ -338,7 +370,7 @@ export default function DeviceDetails() {
         <div className="bento-card" style={{ padding: 22 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
             <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
                 Real-Time System Log Stream ({filteredSystemLogs.length} events)
               </h3>
               <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
@@ -383,7 +415,7 @@ export default function DeviceDetails() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
+                  <tr style={{ borderBottom: '1px solid #e5e7eb', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
                     <th style={{ padding: '10px 12px' }}>STATUS</th>
                     <th style={{ padding: '10px 12px' }}>CATEGORY</th>
                     <th style={{ padding: '10px 12px' }}>ACTIVITY (PLAIN ENGLISH)</th>
@@ -400,7 +432,7 @@ export default function DeviceDetails() {
                       <tr 
                         key={l._id || i}
                         style={{
-                          borderBottom: '1px solid #161e30',
+                          borderBottom: '1px solid #f0f2f5',
                           background: isPolicy ? 'rgba(244, 63, 94, 0.05)' : 'transparent'
                         }}
                       >
@@ -424,7 +456,7 @@ export default function DeviceDetails() {
                           </span>
                         </td>
                         <td style={{ padding: '10px 12px', wordBreak: 'break-word', maxWidth: 450 }}>
-                          <div style={{ color: isPolicy ? '#fca5a5' : '#f8fafc', fontWeight: 700, fontSize: '0.82rem' }}>
+                          <div style={{ color: isPolicy ? '#b91c1c' : '#111827', fontWeight: 700, fontSize: '0.82rem' }}>
                             {l.friendly_summary || l.message || 'No log details'}
                           </div>
                           {l.friendly_summary && l.friendly_summary !== l.message && (
@@ -456,7 +488,7 @@ export default function DeviceDetails() {
           <div className="bento-card bento-card-violet" style={{ padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <Radio size={18} color="#8b5cf6" />
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
                 Active &amp; Historical Network Sessions ({networkData.sessions?.length || 0})
               </h3>
             </div>
@@ -469,7 +501,7 @@ export default function DeviceDetails() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
+                    <tr style={{ borderBottom: '1px solid #e5e7eb', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
                       <th style={{ padding: '8px 12px' }}>STATUS</th>
                       <th style={{ padding: '8px 12px' }}>SUBNET</th>
                       <th style={{ padding: '8px 12px' }}>IP ASSIGNED</th>
@@ -480,7 +512,7 @@ export default function DeviceDetails() {
                   </thead>
                   <tbody>
                     {networkData.sessions.map((sess: any) => (
-                      <tr key={sess._id} style={{ borderBottom: '1px solid #161e30', fontFamily: 'JetBrains Mono, monospace' }}>
+                      <tr key={sess._id} style={{ borderBottom: '1px solid #f0f2f5', fontFamily: 'JetBrains Mono, monospace' }}>
                         <td style={{ padding: '8px 12px' }}>
                           <span className={`neo-badge neo-badge-${sess.status === 'active' ? 'online' : 'offline'}`}>
                             {sess.status.toUpperCase()}
@@ -489,7 +521,7 @@ export default function DeviceDetails() {
                         <td style={{ padding: '8px 12px', color: '#06b6d4', fontWeight: 700 }}>
                           {sess.subnet}
                         </td>
-                        <td style={{ padding: '8px 12px', color: '#f8fafc' }}>
+                        <td style={{ padding: '8px 12px', color: '#111827' }}>
                           {sess.ip_address}
                         </td>
                         <td style={{ padding: '8px 12px', color: '#64748b' }}>
@@ -515,7 +547,7 @@ export default function DeviceDetails() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Globe size={18} color="#00f0ff" />
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
                     Visited Websites &amp; Queried Domains ({networkData.visited_domains?.length || 0})
                   </h3>
                   <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>
@@ -532,35 +564,36 @@ export default function DeviceDetails() {
             </div>
 
             {networkData.visited_domains && networkData.visited_domains.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                 {networkData.visited_domains.map((vd: any, idx: number) => (
                   <div 
                     key={idx} 
                     style={{ 
-                      padding: '12px 14px', 
-                      background: 'rgba(15, 23, 42, 0.75)', 
-                      borderRadius: 8, 
-                      border: '2px solid rgba(0, 240, 255, 0.3)',
-                      boxShadow: '3px 3px 0px #000',
+                      padding: '14px 16px', 
+                      background: '#ffffff', 
+                      borderRadius: 14, 
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 6
+                      gap: 8,
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#00f0ff', fontWeight: 800, fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Globe size={13} color="#00f0ff" />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <Globe size={14} color="#0284c7" />
                         {vd.domain}
                       </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                         <button
                           onClick={() => handleQuickBlockDomain(vd.domain)}
                           style={{
-                            background: 'rgba(239, 68, 68, 0.15)',
-                            border: '1px solid rgba(239, 68, 68, 0.4)',
-                            color: '#f87171',
-                            padding: '2px 8px',
-                            borderRadius: 4,
+                            background: '#fee2e2',
+                            border: '1px solid #fecaca',
+                            color: '#dc2626',
+                            padding: '3px 8px',
+                            borderRadius: 6,
                             fontSize: '0.68rem',
                             fontWeight: 700,
                             cursor: 'pointer',
@@ -576,15 +609,15 @@ export default function DeviceDetails() {
                           href={`https://${vd.domain}`} 
                           target="_blank" 
                           rel="noreferrer" 
-                          style={{ color: '#94a3b8', transition: 'color 0.2s' }}
+                          style={{ color: '#64748b', transition: 'color 0.2s', display: 'flex', alignItems: 'center' }}
                           title={`Open https://${vd.domain}`}
                         >
                           <ExternalLink size={13} />
                         </a>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
-                      <span>IP: <strong style={{ color: '#cbd5e1' }}>{vd.resolved_ip || '—'}</strong></span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem', color: '#64748b', fontFamily: 'JetBrains Mono, monospace' }}>
+                      <span>IP: <strong style={{ color: '#111827' }}>{vd.resolved_ip || '—'}</strong></span>
                       <span>{vd.timestamp ? new Date(vd.timestamp).toLocaleTimeString() : 'Recent'}</span>
                     </div>
                   </div>
@@ -592,10 +625,10 @@ export default function DeviceDetails() {
               </div>
             ) : (
               <div style={{
-                padding: '24px 20px',
-                background: 'rgba(11, 16, 26, 0.8)',
-                border: '1.5px dashed rgba(0, 240, 255, 0.35)',
-                borderRadius: 8,
+                padding: '32px 20px',
+                background: '#f9fafb',
+                border: '1.5px dashed #d1d5db',
+                borderRadius: 16,
                 textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
@@ -606,32 +639,32 @@ export default function DeviceDetails() {
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  background: 'rgba(0, 240, 255, 0.1)',
-                  border: '1.5px solid #00f0ff',
+                  background: '#e0f2fe',
+                  border: '1.5px solid #38bdf8',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#00f0ff'
+                  color: '#0284c7'
                 }}>
                   <Globe size={22} />
                 </div>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '0.92rem', fontWeight: 700, color: '#f8fafc' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '0.92rem', fontWeight: 700, color: '#111827' }}>
                     Active DNS &amp; Web Traffic Listener Ready
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', maxWidth: 560, lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', maxWidth: 560, lineHeight: 1.5 }}>
                     The universal endpoint agent is actively monitoring the operating system DNS cache and outbound browser sockets on <strong>{device?.hostname || 'this device'}</strong> ({device?.ip_address || 'local'}). As websites are accessed, they will appear here in real time.
                   </p>
                 </div>
                 <div style={{
                   marginTop: 6,
                   padding: '6px 14px',
-                  borderRadius: 6,
-                  background: 'rgba(255, 230, 0, 0.1)',
-                  border: '1px solid rgba(255, 230, 0, 0.3)',
+                  borderRadius: 8,
+                  background: '#fefce8',
+                  border: '1px solid #fef08a',
                   fontSize: '0.74rem',
                   fontFamily: 'JetBrains Mono, monospace',
-                  color: '#ffe600'
+                  color: '#854d0e'
                 }}>
                   👉 Open <strong>youtube.com</strong> or any website in Chrome / Edge / Firefox on {device?.hostname || 'the endpoint'} to see it appear!
                 </div>
@@ -645,7 +678,7 @@ export default function DeviceDetails() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Terminal size={18} color="#00f0ff" />
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
                     Network Traffic &amp; Visited Websites Stream ({(networkData.network_logs || []).filter((nl: any) => {
                       const isWeb = nl.event_id === 'DNS_QUERY' || nl.event_id === 'WEB_VISIT' || nl.source === 'dns_cache' || nl.source === 'browser_network' || (nl.message && nl.message.includes('🌐'));
                       if (netTabFilter === 'websites') return isWeb;
@@ -660,7 +693,7 @@ export default function DeviceDetails() {
               </div>
 
               {/* Filter Pills */}
-              <div style={{ display: 'flex', gap: 6, background: '#090d16', padding: 4, borderRadius: 8, border: '1px solid #1e293b' }}>
+              <div style={{ display: 'flex', gap: 6, background: '#f9fafb', padding: 4, borderRadius: 8, border: '1px solid #1e293b' }}>
                 <button
                   type="button"
                   onClick={() => setNetTabFilter('all')}
@@ -727,7 +760,7 @@ export default function DeviceDetails() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
+                    <tr style={{ borderBottom: '1px solid #e5e7eb', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
                       <th style={{ padding: '8px 12px' }}>TIME</th>
                       <th style={{ padding: '8px 12px' }}>SOURCE</th>
                       <th style={{ padding: '8px 12px' }}>EVENT TYPE</th>
@@ -745,7 +778,7 @@ export default function DeviceDetails() {
                       .map((nl: any, i: number) => {
                         const isDns = nl.event_id === 'DNS_QUERY' || nl.source === 'dns_cache' || (nl.message && nl.message.includes('🌐'));
                         return (
-                          <tr key={nl._id || i} style={{ borderBottom: '1px solid #161e30', fontFamily: 'JetBrains Mono, monospace' }}>
+                          <tr key={nl._id || i} style={{ borderBottom: '1px solid #f0f2f5', fontFamily: 'JetBrains Mono, monospace' }}>
                             <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.75rem' }}>
                               {nl.timestamp ? new Date(nl.timestamp).toLocaleTimeString() : '—'}
                             </td>
@@ -783,7 +816,7 @@ export default function DeviceDetails() {
                                 </span>
                               )}
                             </td>
-                            <td style={{ padding: '10px 12px', color: '#f8fafc', wordBreak: 'break-all' }}>
+                            <td style={{ padding: '10px 12px', color: '#111827', wordBreak: 'break-all' }}>
                               {isDns ? (
                                 <span style={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.84rem' }}>
                                   {nl.message}
@@ -817,7 +850,7 @@ export default function DeviceDetails() {
                   CPU UTILIZATION
                 </span>
               </div>
-              <p style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#f8fafc' }}>
+              <p style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#111827' }}>
                 {latestMetric ? `${latestMetric.cpu_percent}%` : '—'}
               </p>
             </div>
@@ -829,7 +862,7 @@ export default function DeviceDetails() {
                   MEMORY USAGE
                 </span>
               </div>
-              <p style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#f8fafc' }}>
+              <p style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#111827' }}>
                 {latestMetric ? `${latestMetric.memory_percent}%` : '—'}
               </p>
               {latestMetric?.memory_used_mb && (
@@ -846,7 +879,7 @@ export default function DeviceDetails() {
                   NETWORK RX / TX
                 </span>
               </div>
-              <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#f8fafc', fontFamily: 'JetBrains Mono, monospace' }}>
+              <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#111827', fontFamily: 'JetBrains Mono, monospace' }}>
                 {latestMetric ? `${((latestMetric.network_rx_bytes || 0) / (1024 * 1024)).toFixed(1)} MB ↓` : '—'}
               </p>
               <span style={{ fontSize: '0.72rem', color: '#10b981', fontFamily: 'JetBrains Mono, monospace' }}>
@@ -857,7 +890,7 @@ export default function DeviceDetails() {
 
           {/* Real Metrics Timeline Chart (ONLY REAL DATA) */}
           <div className="bento-card" style={{ padding: 22 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '0.95rem', fontWeight: 800, color: '#111827', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Activity size={15} color="#06b6d4" /> Telemetry Timeline ({metrics.length} real samples)
             </h3>
             {metrics.length === 0 ? (
@@ -871,7 +904,7 @@ export default function DeviceDetails() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#161e30" />
                     <XAxis dataKey="timestamp" stroke="transparent" tick={{ fill: '#64748b', fontSize: 10 }} />
                     <YAxis stroke="transparent" tick={{ fill: '#64748b', fontSize: 10 }} domain={[0, 100]} unit="%" />
-                    <Tooltip contentStyle={{ background: '#070a11', border: '2px solid #1e293b', borderRadius: 8, fontSize: 11 }} />
+                    <Tooltip contentStyle={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 11 }} />
                     <Area type="monotone" dataKey="cpu_percent" name="CPU %" stroke="#06b6d4" strokeWidth={2} fill="#06b6d420" />
                     <Area type="monotone" dataKey="memory_percent" name="Memory %" stroke="#8b5cf6" strokeWidth={2} fill="#8b5cf620" />
                   </AreaChart>
@@ -884,7 +917,7 @@ export default function DeviceDetails() {
           <div className="bento-card" style={{ padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
+                <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
                   Active Endpoint Processes ({processes.length})
                 </h3>
                 <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
@@ -901,7 +934,7 @@ export default function DeviceDetails() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
+                    <tr style={{ borderBottom: '1px solid #e5e7eb', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
                       <th style={{ padding: '8px 12px' }}>PID</th>
                       <th style={{ padding: '8px 12px' }}>PROCESS NAME</th>
                       <th style={{ padding: '8px 12px' }}>CPU %</th>
@@ -912,17 +945,17 @@ export default function DeviceDetails() {
                   </thead>
                   <tbody>
                     {processes.slice(0, 30).map((p: any) => (
-                      <tr key={p.pid} style={{ borderBottom: '1px solid #161e30', fontFamily: 'JetBrains Mono, monospace' }}>
+                      <tr key={p.pid} style={{ borderBottom: '1px solid #f0f2f5', fontFamily: 'JetBrains Mono, monospace' }}>
                         <td style={{ padding: '8px 12px', color: '#06b6d4', fontWeight: 700 }}>
                           {p.pid}
                         </td>
-                        <td style={{ padding: '8px 12px', color: '#f8fafc', fontWeight: 700 }}>
+                        <td style={{ padding: '8px 12px', color: '#111827', fontWeight: 700 }}>
                           {p.name}
                         </td>
-                        <td style={{ padding: '8px 12px', color: p.cpu_percent > 50 ? '#f43f5e' : '#cbd5e1' }}>
+                        <td style={{ padding: '8px 12px', color: p.cpu_percent > 50 ? '#dc2626' : '#374151', fontWeight: 600 }}>
                           {p.cpu_percent?.toFixed(1) || '0.0'}%
                         </td>
-                        <td style={{ padding: '8px 12px', color: '#cbd5e1' }}>
+                        <td style={{ padding: '8px 12px', color: '#4b5563' }}>
                           {p.memory_percent?.toFixed(1) || '0.0'}%
                         </td>
                         <td style={{ padding: '8px 12px', color: '#8b5cf6' }}>
@@ -944,7 +977,7 @@ export default function DeviceDetails() {
       {/* ── TAB 4: AUDIT TIMELINE ── */}
       {activeTab === 'timeline' && (
         <div className="bento-card" style={{ padding: 22 }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
             Endpoint Audit &amp; Event Timeline ({events.length})
           </h3>
           {events.length === 0 ? (
@@ -969,7 +1002,7 @@ export default function DeviceDetails() {
                       <span style={{ fontWeight: 800, color: s.color, fontSize: '0.85rem', textTransform: 'uppercase', fontFamily: 'JetBrains Mono, monospace' }}>
                         {evt.event}
                       </span>
-                      <span style={{ color: '#cbd5e1', fontSize: '0.82rem' }}>
+                      <span style={{ color: '#4b5563', fontSize: '0.82rem' }}>
                         {evt.details}
                       </span>
                     </div>

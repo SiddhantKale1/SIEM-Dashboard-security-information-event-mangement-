@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0b0f19;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .scene-host {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="20"
+      data-width="1920"
+      data-height="1080"
+    >
+      <audio
+        id="bg-music"
+        src="assets/music/happy-beats-business-moves-vol-1-by-ende-dot-app.mp3"
+        data-start="0"
+        data-duration="20"
+        data-volume="0.60"
+        data-fade-out="1.5"
+      ></audio>
+      <audio
+        id="sfx-key-1"
+        src="assets/sfx/keyboard/keypress-001.wav"
+        data-start="0.6"
+        data-duration="0.4"
+        data-volume="0.4"
+      ></audio>
+      <audio
+        id="sfx-click-1"
+        src="assets/sfx/ui/click1.ogg"
+        data-start="3.6"
+        data-duration="0.3"
+        data-volume="0.6"
+      ></audio>
+      <audio
+        id="sfx-switch-1"
+        src="assets/sfx/interface/switch_001.ogg"
+        data-start="5.2"
+        data-duration="0.4"
+        data-volume="0.5"
+      ></audio>
+      <audio
+        id="sfx-bong-1"
+        src="assets/sfx/interface/bong_001.ogg"
+        data-start="8.6"
+        data-duration="0.15"
+        data-volume="0.8"
+      ></audio>
+      <audio
+        id="sfx-click-2"
+        src="assets/sfx/interface/click_004.ogg"
+        data-start="13.7"
+        data-duration="0.05"
+        data-volume="0.7"
+      ></audio>
+      <audio
+        id="sfx-switch-2"
+        src="assets/sfx/interface/switch_001.ogg"
+        data-start="14.1"
+        data-duration="0.4"
+        data-volume="0.7"
+      ></audio>
+      <audio
+        id="sfx-click-3"
+        src="assets/sfx/ui/click1.ogg"
+        data-start="17.6"
+        data-duration="0.12"
+        data-volume="0.5"
+      ></audio>
+
+      <div
+        id="scene-1-host"
+        class="clip scene-host"
+        data-composition-id="scene1"
+        data-composition-src="compositions/scene1.html"
+        data-start="0"
+        data-duration="3.5"
+      ></div>
+
+      <div
+        id="scene-2-host"
+        class="clip scene-host"
+        data-composition-id="scene2"
+        data-composition-src="compositions/scene2.html"
+        data-start="3.5"
+        data-duration="5.0"
+      ></div>
+
+      <div
+        id="scene-3-host"
+        class="clip scene-host"
+        data-composition-id="scene3"
+        data-composition-src="compositions/scene3.html"
+        data-start="8.5"
+        data-duration="5.0"
+      ></div>
+
+      <div
+        id="scene-4-host"
+        class="clip scene-host"
+        data-composition-id="scene4"
+        data-composition-src="compositions/scene4.html"
+        data-start="13.5"
+        data-duration="4.0"
+      ></div>
+
+      <div
+        id="scene-5-host"
+        class="clip scene-host"
+        data-composition-id="scene5"
+        data-composition-src="compositions/scene5.html"
+        data-start="17.5"
+        data-duration="2.5"
+      ></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

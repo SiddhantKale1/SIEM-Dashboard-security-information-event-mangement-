@@ -3,10 +3,9 @@ import {
   CheckCircle2, 
   ExternalLink, 
   Lock, 
-  Flame, 
   RefreshCw,
   Search,
-  Terminal
+  Clock
 } from 'lucide-react';
 import { WindowsIcon, LinuxPenguinIcon } from '../components/OSIcons';
 import api from '../services/api';
@@ -78,63 +77,54 @@ export default function Threats() {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="flex flex-col gap-5 max-w-[1600px] mx-auto pb-8 font-sans">
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', color: '#f8fafc' }}>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-extrabold text-[#111827] tracking-tight">
               AI Threat Center & Radar
             </h1>
-            <span className="neo-badge neo-badge-critical">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#fee2e2] text-[#991b1b]">
               {stats.active_threats || 0} ACTIVE THREATS
             </span>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+          <p className="text-xs text-[#6b7280] mt-1 font-medium">
             Autonomous behavioral anomaly classification, MITRE ATT&CK correlation, and instant remediation
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="flex items-center gap-2.5">
           <button 
+            type="button"
             onClick={() => fetchThreats()}
-            className="neo-btn neo-btn-ghost"
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#e5e7eb] rounded-xl text-xs font-semibold text-[#111827] hover:bg-[#f9fafb] transition-all shadow-2xs"
           >
-            <RefreshCw size={14} /> Refresh Radar
-          </button>
-          <button 
-            onClick={() => navigate('/simulator')}
-            className="neo-btn neo-btn-violet"
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
-          >
-            <Flame size={14} /> Attack Simulator
+            <RefreshCw className="w-3.5 h-3.5 text-[#6b7280]" />
+            <span>Refresh Radar</span>
           </button>
         </div>
       </div>
 
       {/* MITRE ATT&CK Tactic Barometer */}
-      <div className="bento-card" style={{ padding: '16px 20px', background: '#0a0f1a' }}>
-        <div style={{ fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', color: '#8b5cf6', fontWeight: 700, marginBottom: 10 }}>
-          ACTIVE MITRE ATT&CK DETECTION VECTORS
+      <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="text-xs font-bold text-[#82c341] uppercase tracking-wider mb-3">
+          Active MITRE ATT&CK Detection Vectors
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {stats.mitre_distribution?.length === 0 ? (
-            <span style={{ fontSize: '0.8rem', color: '#475569' }}>
+        <div className="flex gap-2.5 flex-wrap">
+          {!stats.mitre_distribution || stats.mitre_distribution.length === 0 ? (
+            <span className="text-xs text-[#9ca3af]">
               No active hostile tactics detected in current sliding window.
             </span>
           ) : (
-            stats.mitre_distribution?.map((t: any) => (
+            stats.mitre_distribution.map((t: any) => (
               <div 
                 key={t.tactic} 
-                style={{
-                  background: '#070a11', border: '1.5px solid #1e293b',
-                  borderRadius: 6, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6
-                }}
+                className="bg-[#f9fafb] border border-[#e5e7eb] rounded-xl px-3 py-1.5 flex items-center gap-2"
               >
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>{t.tactic}:</span>
-                <span style={{ fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: '#f43f5e' }}>
+                <span className="text-xs font-bold text-[#111827]">{t.tactic}:</span>
+                <span className="text-xs font-extrabold text-[#ef4444]">
                   {t.count} hits
                 </span>
               </div>
@@ -144,38 +134,32 @@ export default function Threats() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: '#0d131f', border: '2px solid #1e293b',
-            borderRadius: 8, padding: '6px 12px', minWidth: 260
-          }}>
-            <Search size={15} color="#64748b" />
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Search Box */}
+          <div className="relative w-72">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
             <input 
               type="text" 
               placeholder="Search by title, host, MITRE..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{
-                background: 'transparent', border: 'none', color: '#f8fafc',
-                fontSize: '0.82rem', outline: 'none', width: '100%', fontFamily: 'inherit'
-              }}
+              className="w-full bg-white border border-[#e5e7eb] rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:border-[#82c341] transition-all shadow-2xs"
             />
           </div>
 
           {/* Status Tabs */}
-          <div style={{ display: 'flex', background: '#0a0e17', border: '2px solid #1e293b', borderRadius: 8, padding: 2 }}>
+          <div className="flex items-center bg-white border border-[#e5e7eb] rounded-xl p-1 shadow-2xs">
             {['active', 'resolved', 'all'].map((st) => (
               <button
                 key={st}
+                type="button"
                 onClick={() => setFilterStatus(st)}
-                style={{
-                  background: filterStatus === st ? '#1e293b' : 'transparent',
-                  color: filterStatus === st ? '#f8fafc' : '#64748b',
-                  border: 'none', borderRadius: 6, padding: '5px 12px',
-                  fontSize: '0.75rem', fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer'
-                }}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  filterStatus === st 
+                    ? 'bg-[#111827] text-white' 
+                    : 'text-[#6b7280] hover:text-[#111827]'
+                }`}
               >
                 {st}
               </button>
@@ -183,17 +167,17 @@ export default function Threats() {
           </div>
 
           {/* Severity Tabs */}
-          <div style={{ display: 'flex', background: '#0a0e17', border: '2px solid #1e293b', borderRadius: 8, padding: 2 }}>
+          <div className="flex items-center bg-white border border-[#e5e7eb] rounded-xl p-1 shadow-2xs">
             {['all', 'critical', 'high', 'medium'].map((sev) => (
               <button
                 key={sev}
+                type="button"
                 onClick={() => setFilterSeverity(sev)}
-                style={{
-                  background: filterSeverity === sev ? (sev === 'critical' ? '#f43f5e' : sev === 'high' ? '#f97316' : '#1e293b') : 'transparent',
-                  color: filterSeverity === sev ? '#ffffff' : '#64748b',
-                  border: 'none', borderRadius: 6, padding: '5px 12px',
-                  fontSize: '0.75rem', fontWeight: 700, textTransform: 'capitalize', cursor: 'pointer'
-                }}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  filterSeverity === sev 
+                    ? sev === 'critical' ? 'bg-[#ef4444] text-white' : sev === 'high' ? 'bg-[#fb923c] text-white' : 'bg-[#111827] text-white'
+                    : 'text-[#6b7280] hover:text-[#111827]'
+                }`}
               >
                 {sev}
               </button>
@@ -203,21 +187,21 @@ export default function Threats() {
       </div>
 
       {/* Threats Grid */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="flex flex-col gap-4">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+          <div className="text-center py-10 text-xs text-[#9ca3af]">
             Scanning AI detection indices...
           </div>
         ) : filteredList.length === 0 ? (
-          <div className="bento-card" style={{ padding: 40, textAlign: 'center' }}>
-            <CheckCircle2 size={36} color="#10b981" style={{ margin: '0 auto 12px' }} />
-            <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc' }}>
+          <div className="bg-white rounded-[24px] p-10 border border-[#f0f2f5] text-center shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+            <CheckCircle2 className="w-10 h-10 text-[#82c341] mx-auto mb-3" />
+            <h3 className="text-base font-extrabold text-[#111827] mb-1">
               No Threats Match Filter
             </h3>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+            <p className="text-xs text-[#6b7280]">
               {filterStatus === 'active' 
-                ? 'All endpoints operating within normal statistical and behavioral baselines.' 
-                : 'No historical threats in this category.'}
+                ? 'All endpoints are operating within normal statistical and behavioral baselines.' 
+                : 'No historical threats match this category.'}
             </p>
           </div>
         ) : (
@@ -228,161 +212,80 @@ export default function Threats() {
             return (
               <div 
                 key={incident._id}
-                className="bento-card"
-                style={{
-                  padding: 20,
-                  borderColor: isCritical ? '#f43f5e' : isHigh ? '#f97316' : '#1e293b',
-                  boxShadow: isCritical ? '4px 4px 0px #be123c' : isHigh ? '4px 4px 0px #9a3412' : '4px 4px 0px #020408'
-                }}
+                className="bg-white rounded-[24px] p-6 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between transition-all hover:border-[#e5e7eb]"
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                      <span className={`neo-badge neo-badge-${incident.severity}`}>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                        isCritical ? 'bg-[#fee2e2] text-[#991b1b]' : isHigh ? 'bg-[#ffedd5] text-[#9a3412]' : 'bg-[#fef9c3] text-[#854d0e]'
+                      }`}>
                         {incident.severity}
                       </span>
-                      <span className="neo-badge neo-badge-violet">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f3f4f6] text-[#374151]">
                         MITRE {incident.mitre_id}: {incident.mitre_technique}
                       </span>
-                      <span className="mono-pill">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#f3f4f6] text-[#111827]">
                         {incident.confidence}% AI CONFIDENCE
                       </span>
-                      <span style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'JetBrains Mono, monospace' }}>
-                        Detected: {new Date(incident.detected_at).toLocaleTimeString()}
+                      <span className="text-[11px] text-[#9ca3af] flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(incident.detected_at).toLocaleTimeString()}
                       </span>
                     </div>
 
-                    {/* Prominent Machine Origin Banner */}
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      background: 'rgba(6, 182, 212, 0.08)', border: '1.5px solid rgba(6, 182, 212, 0.25)',
-                      borderRadius: 8, padding: '8px 12px', marginBottom: 12, flexWrap: 'wrap', gap: 8
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {String(incident.os || '').toLowerCase() === 'windows' ? (
-                            <WindowsIcon size={16} />
-                          ) : (
-                            <LinuxPenguinIcon size={16} />
-                          )}
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800, fontFamily: 'JetBrains Mono, monospace' }}>
-                            SOURCE MACHINE:
-                          </span>
-                          <span style={{ fontWeight: 800, color: '#f8fafc', fontSize: '0.9rem' }}>
-                            {incident.hostname || 'Endpoint'}
-                          </span>
-                        </div>
-                        <span style={{
-                          background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8',
-                          padding: '2px 8px', borderRadius: 4, fontSize: '0.72rem',
-                          fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, border: '1px solid rgba(56, 189, 248, 0.3)'
-                        }}>
-                          IP: {incident.ip_address || '—'}
+                    {/* Machine Origin Banner */}
+                    <div className="bg-[#f0fdf4] border border-[#dcfce7] rounded-xl px-4 py-2.5 mb-3 flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        {incident.os === 'windows' ? <WindowsIcon /> : <LinuxPenguinIcon />}
+                        <span className="text-xs font-bold text-[#111827]">
+                          Host: <span className="font-mono text-[#166534]">{incident.hostname}</span>
                         </span>
-                        <span style={{
-                          background: 'rgba(139, 92, 246, 0.15)', color: '#c084fc',
-                          padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem',
-                          fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase'
-                        }}>
-                          {incident.os || 'OS'}
-                        </span>
+                        <span className="text-xs text-[#9ca3af]">({incident.ip_address})</span>
                       </div>
-
-                      {incident.device_id && (
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/devices/${incident.device_id}`)}
-                          className="neo-btn neo-btn-ghost"
-                          style={{ padding: '4px 10px', fontSize: '0.72rem', height: 26, gap: 4 }}
-                        >
-                          <Terminal size={12} /> Inspect Machine &rarr;
-                        </button>
-                      )}
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-white border border-[#e5e7eb] text-[#374151]">
+                        ID: {incident.device_id}
+                      </span>
                     </div>
 
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 6px' }}>
+                    <h2 className="text-base font-extrabold text-[#111827] mb-1">
                       {incident.title}
-                    </h3>
-                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 12px', lineHeight: 1.4 }}>
+                    </h2>
+                    <p className="text-xs text-[#4b5563] leading-relaxed">
                       {incident.summary}
                     </p>
-
-                    {/* Technical Root Cause Box */}
-                    <div style={{
-                      background: '#070a11', border: '1.5px solid #1e293b',
-                      borderRadius: 8, padding: '10px 14px', marginBottom: 12
-                    }}>
-                      <div style={{ fontSize: '0.7rem', fontFamily: 'JetBrains Mono, monospace', color: '#06b6d4', fontWeight: 700, marginBottom: 4 }}>
-                        ROOT CAUSE ANALYSIS:
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
-                        {incident.root_cause}
-                      </div>
-                    </div>
-
-                    {/* Evidence Snippets */}
-                    {incident.evidence && incident.evidence.length > 0 && (
-                      <div style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: '0.7rem', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', fontWeight: 700, marginBottom: 4 }}>
-                          SIGNAL EVIDENCE:
-                        </div>
-                        <ul style={{ margin: 0, paddingLeft: 18, fontSize: '0.78rem', color: '#94a3b8' }}>
-                          {incident.evidence.map((ev: string, idx: number) => (
-                            <li key={idx} style={{ fontFamily: 'JetBrains Mono, monospace', margin: '2px 0' }}>{ev}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Mitigation Playbook */}
-                    <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 600 }}>
-                      Recommended Action: {incident.recommended_action}
-                    </div>
                   </div>
 
-                  {/* Actions Column */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 150 }}>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', textAlign: 'right' }}>
-                      TARGET HOST: <strong style={{ color: '#f1f5f9' }}>{incident.hostname}</strong>
-                    </div>
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/devices/${incident.device_id}`)}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e5e7eb] rounded-xl text-xs font-semibold text-[#111827] hover:bg-[#f9fafb] transition-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Inspect Node</span>
+                    </button>
 
-                    {incident.status === 'active' ? (
+                    {incident.status === 'active' && (
                       <>
                         <button
+                          type="button"
                           onClick={() => handleIsolate(incident.device_id)}
-                          className="neo-btn neo-btn-coral"
-                          style={{ padding: '8px 12px', fontSize: '0.78rem' }}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-[#fee2e2] border border-[#fecaca] rounded-xl text-xs font-bold text-[#991b1b] hover:bg-[#fecaca] transition-all"
                         >
-                          <Lock size={14} /> Isolate Endpoint
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>Isolate Device</span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleResolve(incident._id)}
-                          className="neo-btn neo-btn-emerald"
-                          style={{ padding: '8px 12px', fontSize: '0.78rem' }}
+                          className="flex items-center gap-1.5 px-3.5 py-2 bg-[#111827] rounded-xl text-xs font-bold text-white hover:bg-black transition-all"
                         >
-                          <CheckCircle2 size={14} /> Mark Resolved
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#82c341]" />
+                          <span>Mark Resolved</span>
                         </button>
                       </>
-                    ) : (
-                      <div style={{
-                        padding: '6px 12px', background: 'rgba(16,185,129,0.1)',
-                        border: '1.5px solid #10b981', borderRadius: 6,
-                        color: '#10b981', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center'
-                      }}>
-                        RESOLVED
-                      </div>
-                    )}
-
-                    {incident.mitre_url && (
-                      <a
-                        href={incident.mitre_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="neo-btn neo-btn-ghost"
-                        style={{ padding: '6px 10px', fontSize: '0.72rem', textDecoration: 'none' }}
-                      >
-                        <ExternalLink size={12} /> MITRE Matrix
-                      </a>
                     )}
                   </div>
                 </div>

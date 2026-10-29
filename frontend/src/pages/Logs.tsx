@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Search, Terminal, RefreshCw, Radio } from 'lucide-react';
+import { Search, Terminal, RefreshCw, Radio, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 function SeverityBadge({ severity }: { severity: string }) {
-  if (severity === 'error')   return <span className="neo-badge neo-badge-critical">ERROR</span>;
-  if (severity === 'warning') return <span className="neo-badge neo-badge-medium">WARNING</span>;
-  return <span className="neo-badge neo-badge-low">INFO</span>;
+  if (severity === 'error')   return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#991b1b] uppercase">ERROR</span>;
+  if (severity === 'warning') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fef9c3] text-[#854d0e] uppercase">WARNING</span>;
+  return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#dcfce7] text-[#166534] uppercase">INFO</span>;
 }
 
 export default function Logs() {
@@ -67,67 +67,63 @@ export default function Logs() {
     }
   };
 
-  const filterTabs: { key: typeof filter; label: string; color: string }[] = [
-    { key: 'all',         label: `All Logs`, color: '#06b6d4' },
-    { key: 'error',       label: `Errors`,   color: '#e11d48' },
-    { key: 'warning',     label: `Warnings`, color: '#f59e0b' },
-    { key: 'information', label: `Info`,     color: '#3b82f6' },
+  const filterTabs: { key: typeof filter; label: string }[] = [
+    { key: 'all',         label: `All Logs` },
+    { key: 'error',       label: `Errors` },
+    { key: 'warning',     label: `Warnings` },
+    { key: 'information', label: `Info` },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="flex flex-col gap-5 max-w-[1600px] mx-auto pb-8 font-sans">
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', color: '#f8fafc' }}>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-extrabold text-[#111827] tracking-tight">
               Centralized Security Event &amp; Log Stream
             </h1>
-            <span className="neo-badge neo-badge-cyan">
-              {totalLogs} EVENTS RECORDED
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#f3f4f6] text-[#374151]">
+              {totalLogs.toLocaleString()} EVENTS RECORDED
             </span>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+          <p className="text-xs text-[#6b7280] mt-1 font-medium">
             Real-time security telemetry, authentication audits, and system event stream across all enrolled endpoints
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="flex items-center gap-2.5">
           <button 
+            type="button"
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`neo-btn ${autoRefresh ? 'neo-btn-emerald' : 'neo-btn-ghost'}`}
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              autoRefresh 
+                ? 'bg-[#dcfce7] text-[#166534] border border-[#bbf7d0]' 
+                : 'bg-white border border-[#e5e7eb] text-[#6b7280]'
+            }`}
           >
-            <Radio size={14} className={autoRefresh ? 'pulse-dot' : ''} />
-            {autoRefresh ? 'Live Auto-Stream: ON' : 'Live Stream: PAUSED'}
+            <Radio className="w-3.5 h-3.5" />
+            <span>{autoRefresh ? 'Live Auto-Stream: ON' : 'Live Stream: PAUSED'}</span>
           </button>
+
           <button 
+            type="button"
             onClick={() => fetchLogs(page, filter, search)}
-            className="neo-btn neo-btn-ghost"
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#e5e7eb] rounded-xl text-xs font-semibold text-[#111827] hover:bg-[#f9fafb] transition-all shadow-2xs"
           >
-            <RefreshCw size={14} /> Refresh
+            <RefreshCw className="w-3.5 h-3.5 text-[#6b7280]" />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
 
-      {/* Bento Toolbar */}
-      <div className="bento-card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 280 }}>
-          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+      {/* Toolbar */}
+      <div className="bg-white rounded-[24px] p-4 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-between gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[280px]">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
           <input
-            style={{
-              width: '100%',
-              background: '#070a11',
-              border: '2px solid #1e293b',
-              borderRadius: 8,
-              padding: '8px 12px 8px 36px',
-              color: '#f8fafc',
-              fontSize: '0.82rem',
-              outline: 'none',
-              fontFamily: 'inherit'
-            }}
+            className="w-full bg-[#f9fafb] border border-[#e5e7eb] rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-[#111827] placeholder-[#9ca3af] focus:bg-white focus:outline-none focus:border-[#82c341] transition-all"
             placeholder="Search security events (e.g. login, sudo, hostname, event ID)..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -136,66 +132,57 @@ export default function Logs() {
         </div>
 
         {/* Filter tabs */}
-        <div style={{ display: 'flex', background: '#0a0e17', border: '2px solid #1e293b', borderRadius: 8, padding: 3, gap: 4, flexWrap: 'wrap' }}>
+        <div className="flex items-center bg-[#f4f5f7] rounded-xl p-1 gap-1">
           {filterTabs.map(t => (
             <button
               key={t.key}
+              type="button"
               onClick={() => handleFilterChange(t.key)}
-              style={{
-                background: filter === t.key ? t.color : 'transparent',
-                color: filter === t.key ? (t.key === 'warning' ? '#000' : '#fff') : '#94a3b8',
-                border: filter === t.key ? '1.5px solid #000' : 'none',
-                borderRadius: 6,
-                padding: '5px 12px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: filter === t.key ? '2px 2px 0px #000' : 'none'
-              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                filter === t.key 
+                  ? 'bg-white text-[#111827] shadow-xs' 
+                  : 'text-[#6b7280] hover:text-[#111827]'
+              }`}
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        <span style={{ color: '#64748b', fontSize: '0.78rem', fontFamily: 'JetBrains Mono, monospace', marginLeft: 'auto' }}>
+        <span className="text-xs font-mono text-[#9ca3af]">
           Showing {logs.length} of {totalLogs}
         </span>
       </div>
 
       {apiError && (
-        <div style={{
-          background: 'rgba(244,63,94,0.1)', border: '2px solid #f43f5e',
-          borderRadius: 8, padding: '12px 18px', color: '#f43f5e', fontSize: '0.85rem'
-        }}>
+        <div className="bg-[#fef2f2] border border-[#fecaca] rounded-2xl p-4 text-xs font-semibold text-[#991b1b]">
           Failed to fetch logs from backend API. Please verify backend service status.
         </div>
       )}
 
-      {/* Logs Table Bento */}
-      <div className="bento-card" style={{ padding: 0 }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
+      {/* Logs Table */}
+      <div className="bg-white rounded-[24px] border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr style={{ borderBottom: '2.5px solid #1e293b', background: '#090d16', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>
-                <th style={{ padding: '10px 14px', width: 110 }}>STATUS</th>
-                <th style={{ padding: '10px 14px', width: 160 }}>CATEGORY</th>
-                <th style={{ padding: '10px 14px' }}>EVENT SUMMARY</th>
-                <th style={{ padding: '10px 14px', width: 130 }}>ENDPOINT</th>
-                <th style={{ padding: '10px 14px', width: 95 }}>TIME</th>
+              <tr className="border-b border-[#e5e7eb] text-[#6b7280] font-mono text-[11px] bg-[#fcfcfd]">
+                <th className="py-3 px-4 w-28">STATUS</th>
+                <th className="py-3 px-4 w-40">CATEGORY</th>
+                <th className="py-3 px-4">EVENT SUMMARY</th>
+                <th className="py-3 px-4 w-36">ENDPOINT</th>
+                <th className="py-3 px-4 w-28 text-right">TIME</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#f0f2f5]">
               {loading && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '40px 14px', textAlign: 'center', color: '#64748b' }}>
+                  <td colSpan={5} className="py-12 text-center text-xs text-[#9ca3af]">
                     Streaming real-time security events from endpoints...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '40px 14px', textAlign: 'center', color: '#475569' }}>
+                  <td colSpan={5} className="py-12 text-center text-xs text-[#9ca3af]">
                     No events match current filter.
                   </td>
                 </tr>
@@ -204,45 +191,30 @@ export default function Logs() {
                   <tr 
                     key={log._id}
                     onClick={() => setSelectedLog(log)}
-                    style={{
-                      borderBottom: '1px solid #141b2b',
-                      cursor: 'pointer',
-                      transition: 'background 0.1s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#0e1627'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
                   >
-                    <td style={{ padding: '10px 14px' }}>
+                    <td className="py-3 px-4">
                       <SeverityBadge severity={log.severity} />
                     </td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{
-                        display: 'inline-block',
-                        padding: '3px 8px',
-                        borderRadius: 6,
-                        fontSize: '0.73rem',
-                        fontWeight: 700,
-                        background: '#1e293b',
-                        color: '#38bdf8',
-                        border: '1px solid #334155'
-                      }}>
+                    <td className="py-3 px-4">
+                      <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#f4f5f7] text-[#374151]">
                         {log.category || 'System Event'}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.84rem' }}>
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-[#111827]">
                         {log.friendly_summary || log.message || '—'}
                       </div>
                       {log.friendly_summary && log.friendly_summary !== log.message && (
-                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+                        <div className="text-[11px] text-[#6b7280] font-mono mt-0.5 truncate max-w-xl">
                           Technical: {log.message}
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#06b6d4' }}>
+                    <td className="py-3 px-4 font-bold text-[#0284c7]">
                       {log.hostname || '—'}
                     </td>
-                    <td style={{ padding: '10px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
+                    <td className="py-3 px-4 font-mono text-[11px] text-[#9ca3af] text-right">
                       {log.timestamp ? format(new Date(log.timestamp), 'HH:mm:ss') : '—'}
                     </td>
                   </tr>
@@ -252,28 +224,25 @@ export default function Logs() {
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        <div style={{
-          padding: '12px 18px', borderTop: '2px solid #1e293b',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#090d16'
-        }}>
-          <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+        {/* Pagination */}
+        <div className="p-4 border-t border-[#f0f2f5] flex items-center justify-between bg-[#fcfcfd]">
+          <span className="text-xs text-[#6b7280]">
             Page {page} of {totalPages}
           </span>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => { const p = Math.max(1, page - 1); setPage(p); fetchLogs(p, filter, search); }}
               disabled={page <= 1}
-              className="neo-btn neo-btn-ghost"
-              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+              className="px-3 py-1 bg-white border border-[#e5e7eb] rounded-lg text-xs font-semibold text-[#111827] hover:bg-[#f9fafb] disabled:opacity-50"
             >
               Previous
             </button>
             <button
+              type="button"
               onClick={() => { const p = Math.min(totalPages, page + 1); setPage(p); fetchLogs(p, filter, search); }}
               disabled={page >= totalPages}
-              className="neo-btn neo-btn-ghost"
-              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+              className="px-3 py-1 bg-white border border-[#e5e7eb] rounded-lg text-xs font-semibold text-[#111827] hover:bg-[#f9fafb] disabled:opacity-50"
             >
               Next
             </button>
@@ -283,57 +252,45 @@ export default function Logs() {
 
       {/* Log Detail Modal */}
       {selectedLog && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20
-        }}>
-          <div className="bento-card bento-card-cyan" style={{ width: '100%', maxWidth: 650, padding: 24, background: '#0b0f19' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Terminal size={18} color="#06b6d4" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc' }}>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[28px] border border-[#eaecf0] shadow-xl w-full max-w-2xl p-6 relative">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#f0f2f5]">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-[#82c341]" />
+                <h3 className="text-base font-extrabold text-[#111827]">
                   Endpoint Event Details
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedLog(null)}
-                className="neo-btn neo-btn-ghost"
-                style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                className="p-1 rounded-lg text-[#9ca3af] hover:text-[#111827]"
               >
-                Close
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
+            <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>ENDPOINT:</span>
-                <div style={{ fontWeight: 700, color: '#f8fafc' }}>{selectedLog.hostname}</div>
+                <span className="text-[10px] text-[#9ca3af] uppercase font-bold block mb-1">ENDPOINT</span>
+                <span className="font-extrabold text-[#111827]">{selectedLog.hostname}</span>
               </div>
               <div>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>CATEGORY:</span>
-                <div style={{ fontWeight: 700, color: '#38bdf8' }}>{selectedLog.category || 'General'}</div>
+                <span className="text-[10px] text-[#9ca3af] uppercase font-bold block mb-1">CATEGORY</span>
+                <span className="font-bold text-[#0284c7]">{selectedLog.category || 'General'}</span>
               </div>
             </div>
 
-            <div style={{ marginBottom: 14 }}>
-              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>EVENT SUMMARY:</span>
-              <div style={{
-                background: '#070a11', border: '1.5px solid #1e293b',
-                borderRadius: 6, padding: '10px 12px', color: '#f8fafc',
-                fontSize: '0.88rem', fontWeight: 700, marginTop: 4
-              }}>
+            <div className="mb-4">
+              <span className="text-[10px] text-[#9ca3af] uppercase font-bold block mb-1">EVENT SUMMARY</span>
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-xl p-3 text-xs font-bold text-[#111827]">
                 {selectedLog.friendly_summary || selectedLog.message}
               </div>
             </div>
 
-            <div style={{ marginBottom: 14 }}>
-              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>RAW TECHNICAL LOG:</span>
-              <pre style={{
-                background: '#05070c', border: '1.5px solid #1e293b',
-                borderRadius: 6, padding: '10px 12px', color: '#94a3b8',
-                fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace',
-                maxHeight: 180, overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '4px 0 0'
-              }}>
+            <div>
+              <span className="text-[10px] text-[#9ca3af] uppercase font-bold block mb-1">RAW TECHNICAL LOG</span>
+              <pre className="bg-[#111827] text-white rounded-xl p-3 text-[11px] font-mono overflow-y-auto max-h-48 whitespace-pre-wrap break-all">
                 {selectedLog.raw_log || selectedLog.message}
               </pre>
             </div>

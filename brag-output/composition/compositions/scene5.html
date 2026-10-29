@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0b0f19;
+      }
+      #scene-5 {
+        width: 1920px;
+        height: 1080px;
+        background: #0b0f19;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        text-align: center;
+      }
+      .outro-shield {
+        width: 130px;
+        height: 130px;
+        margin-bottom: 28px;
+      }
+      .outro-title {
+        font-size: 90px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-bottom: 20px;
+        color: #ffffff;
+      }
+      .outro-title span {
+        color: #82c341;
+      }
+      .outro-punchline {
+        font-size: 34px;
+        font-weight: 700;
+        color: #cbd5e1;
+        margin-bottom: 40px;
+      }
+      .features-pill-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 44px;
+      }
+      .feature-tag {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f1f5f9;
+        padding: 10px 22px;
+        border-radius: 9999px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .outro-repo {
+        font-size: 20px;
+        font-weight: 700;
+        color: #82c341;
+        letter-spacing: 0.05em;
+        padding: 12px 28px;
+        background: rgba(130, 195, 65, 0.1);
+        border-radius: 14px;
+        border: 1px solid rgba(130, 195, 65, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="scene-5"
+      data-composition-id="scene5"
+      data-start="0"
+      data-duration="2.5"
+      data-width="1920"
+      data-height="1080"
+    >
+      <svg class="outro-shield" id="s5-shield" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2.5">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <path d="m9 12 2 2 4-4"></path>
+      </svg>
+      <h1 class="outro-title" id="s5-title">SENTINEL <span>SIEM</span></h1>
+      <div class="outro-punchline" id="s5-punch">Your SOC, autonomous in milliseconds.</div>
+
+      <div class="features-pill-row" id="s5-pills" data-layout-ignore="true">
+        <div class="feature-tag">Real-Time Ingestion</div>
+        <div class="feature-tag">MITRE ATT&CK Engine</div>
+        <div class="feature-tag">One-Click Isolation</div>
+        <div class="feature-tag">Lightweight Agents</div>
+      </div>
+
+      <div class="outro-repo" id="s5-repo" data-layout-ignore="true">
+        github.com/SiddhantKale1/SIEM-Dashboard
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo("#s5-shield", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.5)" }, 0.05);
+      tl.fromTo("#s5-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.15);
+      tl.fromTo("#s5-punch", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.25);
+      tl.fromTo("#s5-pills", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.35);
+      tl.fromTo("#s5-repo", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.4)" }, 0.45);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene5"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

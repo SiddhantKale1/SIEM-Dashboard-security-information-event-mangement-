@@ -1,5 +1,7 @@
 # SIEM MVP - Centralized Device & Log Management
 
+![Sentinel SIEM Platform](docs/images/dashboard-hero.jpg)
+
 This project is a minimum viable product (MVP) for a centralized security telemetry and log-management platform. It discovers and manages authorized devices, collects system telemetry and logs, normalizes data into a common schema, and provides a centralized React dashboard.
 
 ## Architecture

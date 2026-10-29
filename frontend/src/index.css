@@ -1,349 +1,200 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --color-dark-bg:         #08090d;
-  --color-dark-surface:    #0e131d;
-  --color-dark-card:       #131a27;
-  --color-dark-border:     #232d42;
-  --color-dark-border-2:   #3b4861;
-  --color-brand-yellow:    #ffe600;
-  --color-brand-cyan:      #00f0ff;
-  --color-brand-emerald:   #00ff66;
-  --color-brand-violet:    #9d4edd;
-  --color-brand-coral:     #ff0055;
-  --color-brand-amber:     #ff6b00;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --color-canvas-bg: #f3f4f6;
+  --color-card-bg: #ffffff;
+  --color-accent-lime: #82c341;
+  --color-accent-lime-hover: #73b035;
+  --color-accent-yellow: #facc15;
+  --color-accent-orange: #fb923c;
+  --color-text-main: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-subtle: #9ca3af;
+  --color-border-light: #f0f2f5;
+  --color-border-card: #e5e7eb;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-body {
-  background-color: #08090d;
-  color: #f1f5f9;
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+html, body {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
 }
 
-/* ─── Cyber-Neobrutalism Bento Design Tokens (OG Aesthetic) ─────── */
-
-/* Base Bento Card */
-.bento-card {
-  background: #0f1522;
-  border: 2.5px solid #232d42;
-  border-radius: 12px;
-  box-shadow: 4px 4px 0px #000000;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.bento-card:hover {
-  border-color: #00f0ff;
-  box-shadow: 6px 6px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Color Accent Variants for Bento Cards */
-.bento-card-yellow {
-  border-color: #ffe600;
-  box-shadow: 4px 4px 0px #000000;
-}
-.bento-card-yellow:hover {
-  box-shadow: 6px 6px 0px #ffe600;
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
 }
 
-.bento-card-cyan {
-  border-color: #00f0ff;
-  box-shadow: 4px 4px 0px #000000;
-}
-.bento-card-cyan:hover {
-  box-shadow: 6px 6px 0px #00f0ff;
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
-.bento-card-violet {
-  border-color: #9d4edd;
-  box-shadow: 4px 4px 0px #000000;
-}
-.bento-card-violet:hover {
-  box-shadow: 6px 6px 0px #9d4edd;
-}
-
-.bento-card-emerald {
-  border-color: #00ff66;
-  box-shadow: 4px 4px 0px #000000;
-}
-.bento-card-emerald:hover {
-  box-shadow: 6px 6px 0px #00ff66;
+/* Card utility */
+.siem-card, .bento-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid #f0f2f5;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
 }
 
-.bento-card-coral {
-  border-color: #ff0055;
-  box-shadow: 4px 4px 0px #000000;
-}
-.bento-card-coral:hover {
-  box-shadow: 6px 6px 0px #ff0055;
+.siem-card-interactive:hover, .bento-card:hover {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+  border-color: #e5e7eb;
 }
 
-.bento-card-amber {
-  border-color: #ff6b00;
-  box-shadow: 4px 4px 0px #000000;
-}
-.bento-card-amber:hover {
-  box-shadow: 6px 6px 0px #ff6b00;
-}
-
-/* Bento Grid System */
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 1024px) {
-  .bento-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .bento-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ─── Tactile Neobrutalist Buttons ──────────────────────────────── */
+/* Clean Modern Buttons */
 .neo-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-family: 'Space Grotesk', inherit;
-  font-weight: 700;
-  font-size: 0.875rem;
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: 2.5px solid #000000;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.1s ease;
-  user-select: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.neo-btn:active {
-  transform: translate(2px, 2px) !important;
-  box-shadow: 1px 1px 0px #000000 !important;
+.neo-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 
-.neo-btn-yellow {
-  background: #ffe600;
-  color: #000000;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-yellow:hover {
-  background: #fff04d;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
+.neo-btn-cyan, .neo-btn-yellow, .neo-btn-emerald {
+  background: #111827 !important;
+  color: #ffffff !important;
+  border-color: #111827 !important;
 }
 
-.neo-btn-cyan {
-  background: #00f0ff;
-  color: #000000;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-cyan:hover {
-  background: #4df4ff;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
+.neo-btn-cyan:hover, .neo-btn-yellow:hover, .neo-btn-emerald:hover {
+  background: #000000 !important;
 }
 
-.neo-btn-violet {
-  background: #9d4edd;
-  color: #ffffff;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-violet:hover {
-  background: #b572ed;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
-}
-
-.neo-btn-emerald {
-  background: #00ff66;
-  color: #000000;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-emerald:hover {
-  background: #4dff8f;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
-}
-
-.neo-btn-coral {
-  background: #ff0055;
-  color: #ffffff;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-coral:hover {
-  background: #ff3377;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
-}
-
-.neo-btn-amber {
-  background: #ff6b00;
-  color: #000000;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-amber:hover {
-  background: #ff8533;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
-}
-
-.neo-btn-ghost {
-  background: #141a27;
-  color: #cbd5e1;
-  border-color: #232d42;
-  box-shadow: 3.5px 3.5px 0px #000000;
-}
-.neo-btn-ghost:hover {
-  background: #1b2333;
-  border-color: #00f0ff;
-  color: #f8fafc;
-  box-shadow: 5px 5px 0px #000000;
-  transform: translate(-1.5px, -1.5px);
-}
-
-/* ─── Neobrutalist Badges ────────────────────────────────────────── */
+/* Clean Badges */
 .neo-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 3px 8px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
-  font-weight: 800;
-  border-radius: 6px;
-  border: 1.5px solid #000000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 9999px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  box-shadow: 2px 2px 0px #000000;
+  letter-spacing: 0.03em;
 }
 
-.neo-badge-critical {
-  background: #ff0055;
-  color: #ffffff;
+.neo-badge-emerald, .neo-badge-online {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.neo-badge-high {
-  background: #ff6b00;
-  color: #000000;
+.neo-badge-critical, .neo-badge-isolated {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-.neo-badge-medium {
-  background: #ffe600;
-  color: #000000;
+.neo-badge-high, .neo-badge-amber {
+  background: #ffedd5;
+  color: #9a3412;
 }
 
-.neo-badge-low {
-  background: #00f0ff;
-  color: #000000;
+.neo-badge-medium, .neo-badge-yellow {
+  background: #fef9c3;
+  color: #854d0e;
 }
 
-.neo-badge-online {
-  background: #00ff66;
-  color: #000000;
+.neo-badge-low, .neo-badge-cyan, .neo-badge-violet {
+  background: #f3f4f6;
+  color: #374151;
 }
 
-.neo-badge-offline {
-  background: #475569;
-  color: #f1f5f9;
-}
-
-.neo-badge-isolated {
-  background: #ff0055;
-  color: #ffffff;
-}
-
-.neo-badge-yellow {
-  background: #ffe600;
-  color: #000000;
-}
-
-.neo-badge-cyan {
-  background: #00f0ff;
-  color: #000000;
-}
-
-.neo-badge-violet {
-  background: #9d4edd;
-  color: #ffffff;
-}
-
-/* Monospace Pill */
 .mono-pill {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: monospace;
   font-size: 0.75rem;
-  background: #08090d;
-  border: 1.5px solid #232d42;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 2px 6px;
-  color: #00f0ff;
+  color: #111827;
 }
 
-/* Tactile Neobrutal Inputs */
 .neo-input {
-  background: #0e131d;
-  border: 2px solid #232d42;
-  border-radius: 8px;
-  color: #f1f5f9;
-  font-family: 'Space Grotesk', inherit;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #111827;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
   transition: all 0.15s ease;
-  box-shadow: 2.5px 2.5px 0px #000000;
 }
+
 .neo-input:focus {
   outline: none;
-  border-color: #00f0ff;
-  box-shadow: 3.5px 3.5px 0px #00f0ff;
+  border-color: #82c341;
+  box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2);
 }
 
-/* ─── Animated Radar Scan Effect ────────────────────────────────── */
-@keyframes radar-sweep {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Dropdown / Select styling */
+.siem-select {
+  appearance: none;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  padding: 0.25rem 1.5rem 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 0.85rem;
 }
 
-.radar-spinner {
-  animation: radar-sweep 4s linear infinite;
+.siem-select:focus {
+  outline: none;
+  border-color: #82c341;
 }
 
-/* Pulse animation for live indicators */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+/* Custom Tooltip animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.pulse-dot {
-  animation: pulse-dot 1.8s ease-in-out infinite;
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-::-webkit-scrollbar-track {
-  background: #070a11;
-}
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+.animate-tooltip {
+  animation: fadeInScale 0.15s ease-out forwards;
 }

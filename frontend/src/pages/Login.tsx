@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ShieldCheck, 
   Lock, 
   User, 
   Eye, 
   EyeOff, 
   ArrowRight, 
   AlertCircle, 
-  KeyRound,
   HelpCircle,
-  Activity
+  Activity,
+  CheckCircle2
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -25,7 +24,6 @@ export default function Login() {
   const [showHelp, setShowHelp] = useState(false);
   const navigate = useNavigate();
 
-  // Load remembered username if present
   useEffect(() => {
     const savedUser = localStorage.getItem('siem_remembered_username');
     if (savedUser) {
@@ -33,7 +31,6 @@ export default function Login() {
       setRememberMe(true);
     }
 
-    // Ping API gateway health
     api.get('/health')
       .then(() => setGatewayOnline(true))
       .catch(() => setGatewayOnline(false));
@@ -66,438 +63,185 @@ export default function Login() {
 
       if (res.data?.access_token) {
         localStorage.setItem('access_token', res.data.access_token);
-        
         if (rememberMe) {
           localStorage.setItem('siem_remembered_username', cleanUser);
         } else {
           localStorage.removeItem('siem_remembered_username');
         }
-
-        // Redirect to dashboard
-        navigate('/');
+        navigate('/', { replace: true });
       } else {
-        setError('Authentication gateway did not return an access token.');
+        throw new Error('Authentication response did not contain an access token.');
       }
     } catch (err: any) {
-      console.error('Login attempt failed:', err);
       if (err.response?.status === 401) {
-        setError('Invalid operator credentials. Access denied.');
-      } else if (err.code === 'ERR_NETWORK' || !err.response) {
-        setError('Cannot reach SIEM Gateway server. Ensure the backend is active on port 8000.');
+        setError('Invalid username or password. Default admin/admin.');
+      } else if (err.code === 'ERR_NETWORK') {
+        setError('Cannot reach SIEM Gateway server. Ensure backend is active on port 8000.');
       } else {
-        const detail = err.response?.data?.detail;
-        setError(typeof detail === 'string' ? detail : 'Authentication request failed.');
+        setError(err.response?.data?.detail || 'Authentication failed. Please verify credentials.');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleQuickDemoFill = () => {
+    setUsername('admin');
+    setPassword('admin');
+    setError(null);
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'radial-gradient(ellipse at top, #0d1527 0%, #050811 100%)',
-      position: 'relative',
-      padding: '24px',
-      overflow: 'hidden'
-    }}>
-      {/* Background Cyber Grid */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundImage: `
-          linear-gradient(to right, rgba(30, 41, 59, 0.22) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(30, 41, 59, 0.22) 1px, transparent 1px)
-        `,
-        backgroundSize: '40px 40px',
-        pointerEvents: 'none'
-      }} />
-
-      {/* Ambient Lighting Orbs */}
-      <div style={{
-        position: 'absolute',
-        top: '15%',
-        left: '20%',
-        width: 380,
-        height: 380,
-        background: 'rgba(6, 182, 212, 0.06)',
-        filter: 'blur(120px)',
-        borderRadius: '50%',
-        pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '15%',
-        right: '20%',
-        width: 420,
-        height: 420,
-        background: 'rgba(139, 92, 246, 0.05)',
-        filter: 'blur(140px)',
-        borderRadius: '50%',
-        pointerEvents: 'none'
-      }} />
-
-      {/* Main Login Card */}
-      <div style={{
-        width: '100%',
-        maxWidth: 460,
-        background: 'rgba(13, 20, 36, 0.85)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(56, 189, 248, 0.2)',
-        borderRadius: 20,
-        padding: '36px 32px',
-        position: 'relative',
-        zIndex: 2,
-        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px 0 rgba(6, 182, 212, 0.1)'
-      }}>
-
-        {/* Top Header & Branding */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{
-            width: 58,
-            height: 58,
-            margin: '0 auto 16px',
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%)',
-            border: '1.5px solid #06b6d4',
-            borderRadius: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#38bdf8',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)'
-          }}>
-            <ShieldCheck size={32} />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f4f5f7] p-4 font-sans text-[#111827]">
+      
+      {/* Login Card */}
+      <div className="w-full max-w-[420px] bg-white rounded-[28px] border border-[#eaecf0] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] relative">
+        
+        {/* Brand Header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 mb-2">
+            <span className="text-3xl font-black tracking-tight text-[#111827]">
+              SENTINEL
+            </span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#82c341]/20 text-[#65a30d]">
+              SIEM
+            </span>
           </div>
-
-          <h1 style={{
-            margin: 0,
-            fontSize: '1.65rem',
-            fontWeight: 900,
-            color: '#f8fafc',
-            letterSpacing: '-0.02em',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8
-          }}>
-            AETHER <span style={{ color: '#06b6d4' }}>SIEM</span>
-          </h1>
-
-          <p style={{
-            margin: '6px 0 0',
-            fontSize: '0.8rem',
-            color: '#94a3b8',
-            fontFamily: 'JetBrains Mono, monospace',
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase'
-          }}>
-            Enterprise Security Operations Center
+          <p className="text-xs text-[#6b7280] font-medium">
+            Centralized Telemetry & Log Management
           </p>
 
           {/* Gateway Status Badge */}
-          <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 9999, background: '#070c18', border: '1px solid #1e293b', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
-            <span style={{
-              width: 7,
-              height: 7,
-              borderRadius: '50%',
-              background: gatewayOnline === true ? '#10b981' : gatewayOnline === false ? '#ef4444' : '#f59e0b',
-              boxShadow: gatewayOnline === true ? '0 0 8px #10b981' : 'none'
-            }} />
-            <span style={{ color: gatewayOnline === true ? '#6ee7b7' : gatewayOnline === false ? '#fca5a5' : '#cbd5e1' }}>
-              {gatewayOnline === true ? 'AUTHENTICATION GATEWAY: ACTIVE' : gatewayOnline === false ? 'GATEWAY OFFLINE (PORT 8000)' : 'CHECKING GATEWAY...'}
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4f5f7] border border-[#e5e7eb] text-[11px] font-medium">
+            <span className={`w-2 h-2 rounded-full ${gatewayOnline === true ? 'bg-[#82c341]' : gatewayOnline === false ? 'bg-[#ef4444]' : 'bg-[#facc15]'}`} />
+            <span className="text-[#4b5563]">
+              {gatewayOnline === true ? 'Gateway Active (Port 8000)' : gatewayOnline === false ? 'Gateway Offline' : 'Connecting...'}
             </span>
           </div>
         </div>
 
         {/* Error Alert Box */}
         {error && (
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            borderRadius: 10,
-            padding: '12px 14px',
-            marginBottom: 20,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            color: '#fca5a5',
-            fontSize: '0.82rem',
-            fontWeight: 600,
-            lineHeight: 1.4
-          }}>
-            <AlertCircle size={18} style={{ color: '#ef4444', flexShrink: 0 }} />
+          <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl p-3 mb-4 flex items-center gap-2.5 text-xs text-[#991b1b] font-medium">
+            <AlertCircle className="w-4 h-4 text-[#ef4444] shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Authentication Form */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Form */}
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
           
-          {/* Username Field */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              fontFamily: 'JetBrains Mono, monospace',
-              color: '#94a3b8',
-              letterSpacing: '0.04em'
-            }}>
-              OPERATOR ID / USERNAME
+          {/* Username */}
+          <div>
+            <label className="block text-xs font-bold text-[#374151] mb-1.5">
+              Operator Username
             </label>
-            <div style={{ position: 'relative' }}>
-              <User 
-                size={17} 
-                style={{
-                  position: 'absolute',
-                  left: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#64748b',
-                  pointerEvents: 'none'
-                }} 
-              />
+            <div className="relative">
+              <User className="w-4 h-4 text-[#9ca3af] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter admin username"
+                placeholder="Enter username (e.g. admin)"
                 required
-                autoFocus
-                autoComplete="username"
-                style={{
-                  width: '100%',
-                  background: '#070c18',
-                  border: '1px solid #334155',
-                  borderRadius: 10,
-                  padding: '12px 14px 12px 42px',
-                  color: '#f8fafc',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  transition: 'border-color 0.2s, box-shadow 0.2s'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#06b6d4';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.15)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#334155';
-                  e.target.style.boxShadow = 'none';
-                }}
+                className="w-full bg-[#f9fafb] border border-[#e5e7eb] rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#111827] focus:bg-white focus:outline-none focus:border-[#82c341] transition-all"
               />
             </div>
           </div>
 
-          {/* Password Field */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <label style={{
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                fontFamily: 'JetBrains Mono, monospace',
-                color: '#94a3b8',
-                letterSpacing: '0.04em'
-              }}>
-                SECRET KEY / PASSWORD
+          {/* Password */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-[#374151]">
+                Password
               </label>
               <button
                 type="button"
                 onClick={() => setShowHelp(!showHelp)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#38bdf8',
-                  fontSize: '0.72rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                className="text-[11px] text-[#6b7280] hover:text-[#111827] flex items-center gap-1"
               >
-                <HelpCircle size={12} />
-                Need Help?
+                <HelpCircle className="w-3 h-3" />
+                <span>Demo Info</span>
               </button>
             </div>
-
-            <div style={{ position: 'relative' }}>
-              <Lock 
-                size={17} 
-                style={{
-                  position: 'absolute',
-                  left: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#64748b',
-                  pointerEvents: 'none'
-                }} 
-              />
+            <div className="relative">
+              <Lock className="w-4 h-4 text-[#9ca3af] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder="Enter password (e.g. admin)"
                 required
-                autoComplete="current-password"
-                style={{
-                  width: '100%',
-                  background: '#070c18',
-                  border: '1px solid #334155',
-                  borderRadius: 10,
-                  padding: '12px 42px 12px 42px',
-                  color: '#f8fafc',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  transition: 'border-color 0.2s, box-shadow 0.2s'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#06b6d4';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.15)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#334155';
-                  e.target.style.boxShadow = 'none';
-                }}
+                className="w-full bg-[#f9fafb] border border-[#e5e7eb] rounded-xl pl-10 pr-10 py-2.5 text-xs font-medium text-[#111827] focus:bg-white focus:outline-none focus:border-[#82c341] transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-                title={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#4b5563]"
               >
-                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          {/* Help Drawer */}
+          {/* Demo Info Box */}
           {showHelp && (
-            <div style={{
-              background: '#080d1a',
-              border: '1px solid #1e293b',
-              borderRadius: 8,
-              padding: '12px 14px',
-              fontSize: '0.78rem',
-              color: '#94a3b8',
-              lineHeight: 1.5
-            }}>
-              <p style={{ margin: 0, fontWeight: 700, color: '#f8fafc' }}>
-                Default SOC Operator Credentials:
-              </p>
-              <p style={{ margin: '4px 0 8px', color: '#cbd5e1' }}>
-                Username: <code style={{ color: '#38bdf8' }}>admin</code> &bull; Password: <code style={{ color: '#38bdf8' }}>admin</code>
-              </p>
-              <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b' }}>
-                For credential reset, review security server environment or execute the command-line utility.
-              </p>
+            <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl p-3 text-[11px] text-[#166534]">
+              <div className="flex items-center justify-between">
+                <span>Default Admin Login: <b>admin</b> / <b>admin</b></span>
+                <button
+                  type="button"
+                  onClick={handleQuickDemoFill}
+                  className="px-2 py-0.5 bg-[#82c341] text-white rounded-md font-bold text-[10px] hover:bg-[#65a30d]"
+                >
+                  Auto-fill
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Remember Me Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.8rem', color: '#94a3b8' }}>
+          {/* Remember me */}
+          <div className="flex items-center justify-between mt-1">
+            <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6b7280]">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                style={{
-                  width: 16,
-                  height: 16,
-                  accentColor: '#06b6d4',
-                  cursor: 'pointer'
-                }}
+                className="rounded border-[#d1d5db] text-[#82c341] focus:ring-[#82c341]"
               />
-              Remember workstation ID
+              <span>Remember me</span>
             </label>
-
-            <span style={{ fontSize: '0.75rem', color: '#475569', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <KeyRound size={12} />
-              TLS 1.3 Active
+            <span className="text-[11px] text-[#9ca3af] flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-[#82c341]" />
+              SOC Verified
             </span>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '13px 20px',
-              borderRadius: 10,
-              background: loading 
-                ? '#1e293b' 
-                : 'linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)',
-              border: 'none',
-              color: '#ffffff',
-              fontSize: '0.92rem',
-              fontWeight: 800,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              boxShadow: loading ? 'none' : '0 4px 14px rgba(6, 182, 212, 0.4)',
-              transition: 'transform 0.15s, box-shadow 0.15s',
-              marginTop: 6
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="w-full mt-2 py-3 px-4 bg-[#111827] text-white text-xs font-bold rounded-xl hover:bg-black transition-all shadow-sm flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <Activity size={18} className="animate-spin" />
-                <span>Authenticating Operator...</span>
+                <Activity className="w-4 h-4 animate-spin text-[#82c341]" />
+                <span>Signing in...</span>
               </>
             ) : (
               <>
-                <span>Enter SOC Matrix</span>
-                <ArrowRight size={17} />
+                <span>Sign In to Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
 
-        {/* Security Compliance Footer */}
-        <div style={{
-          marginTop: 28,
-          paddingTop: 18,
-          borderTop: '1px solid #1e293b',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 6,
-          textAlign: 'center'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#64748b', fontSize: '0.72rem' }}>
-            <span>SOC 2 Type II</span>
-            <span>&bull;</span>
-            <span>256-bit AES</span>
-            <span>&bull;</span>
-            <span>Zero-Trust Architecture</span>
-          </div>
-          <p style={{ margin: 0, fontSize: '0.68rem', color: '#475569' }}>
-            Authorized administrative personnel only. Unauthorized access is logged & investigated.
-          </p>
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-[#f0f2f5] text-center text-[11px] text-[#9ca3af]">
+          Sentinel SIEM v1.0 • Enterprise Security & Observability
         </div>
+
       </div>
     </div>
   );

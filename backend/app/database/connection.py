@@ -9,19 +9,22 @@ logger = logging.getLogger(__name__)
 # Uses mongita: a MongoDB-compatible, file-backed database.
 # Data survives server restarts. No separate server process needed.
 
+import asyncio
+
 _db_instance = None
 
 class _MongitaWrapper:
-    """Thin async wrapper around mongita's synchronous client."""
+    """Thin async wrapper around mongita's synchronous client with concurrency lock."""
 
     def __init__(self, path: str, db_name: str):
         from mongita import MongitaClientDisk
         self._client = MongitaClientDisk(path)
         self._db = self._client[db_name]
+        self._lock = asyncio.Lock()
 
     def __getattr__(self, name: str):
         # Delegate attribute access to the underlying mongita db
-        return _MongitaCollectionWrapper(getattr(self._db, name))
+        return _MongitaCollectionWrapper(getattr(self._db, name), self._lock)
 
     def close(self):
         try:
@@ -33,88 +36,98 @@ class _MongitaWrapper:
 class _MongitaCollectionWrapper:
     """Makes mongita's sync collection look async (find returns cursors, etc.)."""
 
-    def __init__(self, col):
+    def __init__(self, col, lock: asyncio.Lock):
         self._col = col
+        self._lock = lock
 
     # --- write ops ---
     async def insert_one(self, doc):
-        return self._col.insert_one(doc)
+        async with self._lock:
+            return self._col.insert_one(doc)
 
     async def insert_many(self, docs):
-        return self._col.insert_many(docs)
+        async with self._lock:
+            return self._col.insert_many(docs)
 
     async def update_one(self, filter, update, upsert=False):
-        if upsert:
-            existing = self._col.find_one(filter)
-            if not existing:
-                new_doc = dict(filter)
-                if "$set" in update:
-                    new_doc.update(update["$set"])
-                return self._col.insert_one(new_doc)
-        return self._col.update_one(filter, update)
+        async with self._lock:
+            if upsert:
+                existing = self._col.find_one(filter)
+                if not existing:
+                    new_doc = dict(filter)
+                    if "$set" in update:
+                        new_doc.update(update["$set"])
+                    return self._col.insert_one(new_doc)
+            return self._col.update_one(filter, update)
 
     async def update_many(self, filter, update):
-        return self._col.update_many(filter, update)
+        async with self._lock:
+            return self._col.update_many(filter, update)
 
     async def delete_one(self, filter):
-        try:
-            return self._col.delete_one(filter)
-        except Exception as e:
-            logger.warning(f"delete_one handled error: {e}")
-            return type('DeleteResult', (), {'deleted_count': 0})()
+        async with self._lock:
+            try:
+                return self._col.delete_one(filter)
+            except Exception as e:
+                logger.warning(f"delete_one handled error: {e}")
+                return type('DeleteResult', (), {'deleted_count': 0})()
 
     async def delete_many(self, filter):
-        try:
-            return self._col.delete_many(filter)
-        except Exception as e:
-            logger.warning(f"delete_many handled error: {e}")
-            count = 0
+        async with self._lock:
             try:
-                matching = list(self._col.find(filter or {}))
-                for m in matching:
-                    try:
-                        self._col.delete_one({"_id": m["_id"]})
-                        count += 1
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-            return type('DeleteResult', (), {'deleted_count': count})()
+                return self._col.delete_many(filter)
+            except Exception as e:
+                logger.warning(f"delete_many handled error: {e}")
+                count = 0
+                try:
+                    matching = list(self._col.find(filter or {}))
+                    for m in matching:
+                        try:
+                            self._col.delete_one({"_id": m["_id"]})
+                            count += 1
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+                return type('DeleteResult', (), {'deleted_count': count})()
 
     # --- read ops ---
     async def find_one(self, filter=None, *args, **kwargs):
-        try:
-            return self._col.find_one(filter or {})
-        except Exception as e:
-            logger.warning(f"find_one handled error: {e}")
-            return None
+        async with self._lock:
+            try:
+                return self._col.find_one(filter or {})
+            except Exception as e:
+                logger.warning(f"find_one handled error: {e}")
+                return None
 
     def find(self, filter=None, **kwargs):
         try:
-            return _MongitaCursorWrapper(self._col.find(filter or {}))
+            return _MongitaCursorWrapper(self._col.find(filter or {}), self._lock)
         except Exception as e:
             logger.warning(f"find handled error: {e}")
-            return _MongitaCursorWrapper([])
+            return _MongitaCursorWrapper([], self._lock)
 
     async def count_documents(self, filter=None):
-        try:
-            return self._col.count_documents(filter or {})
-        except Exception as e:
-            logger.warning(f"count_documents handled error: {e}")
+        async with self._lock:
             try:
-                return len(list(self._col.find(filter or {})))
-            except Exception:
-                return 0
+                return self._col.count_documents(filter or {})
+            except Exception as e:
+                logger.warning(f"count_documents handled error: {e}")
+                try:
+                    return len(list(self._col.find(filter or {})))
+                except Exception:
+                    return 0
 
     async def create_index(self, keys, **kwargs):
         pass  # mongita handles indexing automatically; no-op here
 
 
 class _MongitaCursorWrapper:
-    """Makes mongita cursor look async."""
+    """Makes mongita cursor look async with safe concurrency-locked iteration."""
 
-    def __init__(self, cursor):
+    def __init__(self, cursor, lock: asyncio.Lock = None):
         self._cursor = cursor
+        self._lock = lock
         self._sort_key = None
         self._sort_dir = None
         self._limit_val = None
@@ -129,11 +142,21 @@ class _MongitaCursorWrapper:
         return self
 
     async def to_list(self, length=None):
-        try:
-            results = list(self._cursor)
-        except Exception as e:
-            logger.warning(f"cursor to_list handled error: {e}")
-            results = []
+        results = []
+        if self._lock:
+            async with self._lock:
+                try:
+                    for doc in self._cursor:
+                        results.append(doc)
+                except Exception as e:
+                    logger.warning(f"cursor to_list iteration handled error: {e}")
+        else:
+            try:
+                for doc in self._cursor:
+                    results.append(doc)
+            except Exception as e:
+                logger.warning(f"cursor to_list iteration handled error: {e}")
+
         if self._sort_key:
             import pymongo
             from datetime import datetime, timezone

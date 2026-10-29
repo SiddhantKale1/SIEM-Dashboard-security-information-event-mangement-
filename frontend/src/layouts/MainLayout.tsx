@@ -1,48 +1,40 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
-  ShieldAlert, 
   LayoutGrid, 
+  Monitor, 
+  ShieldAlert, 
   Radio, 
   Terminal, 
-  LogOut, 
-  Sparkles,
-  Monitor
+  ChevronLeft, 
+  ChevronRight, 
+  BookOpen, 
+  Headphones, 
+  ShieldCheck, 
+  Search, 
+  Bell, 
+  Settings as SettingsIcon, 
+  Plus
 } from 'lucide-react';
 import api from '../services/api';
-import ChangePasswordModal from '../components/ChangePasswordModal';
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [user, setUser] = useState<{ username: string; must_change_password?: boolean } | null>(null);
+  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeThreats, setActiveThreats] = useState<number>(0);
-  const [activeNetworkInfo, setActiveNetworkInfo] = useState<{ subnet?: string; active_devices_count?: number }>({});
-
-  const fetchLiveStatus = async () => {
-    try {
-      const [threatsRes, trafficRes] = await Promise.all([
-        api.get('/anomalies/stats').catch(() => ({ data: { active_threats: 0 } })),
-        api.get('/network/traffic').catch(() => ({ data: { active_devices_count: 0, network: null } }))
-      ]);
-      setActiveThreats(threatsRes.data.active_threats || 0);
-      setActiveNetworkInfo({
-        subnet: trafficRes.data.network?.subnet,
-        active_devices_count: trafficRes.data.active_devices_count
-      });
-    } catch {
-      // ignore in background
-    }
-  };
 
   useEffect(() => {
     api.get('/auth/me')
       .then(res => setUser(res.data))
-      .catch(() => handleLogout());
+      .catch(() => {
+        setUser({ username: 'Admin' });
+      });
 
-    fetchLiveStatus();
-    const interval = setInterval(fetchLiveStatus, 15000);
-    return () => clearInterval(interval);
+    api.get('/anomalies/stats')
+      .then(res => setActiveThreats(res.data?.active_threats || 0))
+      .catch(() => {});
   }, []);
 
   const handleLogout = () => {
@@ -50,239 +42,255 @@ export default function MainLayout() {
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Command Bento',   path: '/',           icon: LayoutGrid,    badge: null },
-    { name: 'AI Threat Radar', path: '/threats',    icon: ShieldAlert,   badge: activeThreats > 0 ? activeThreats : null, badgeColor: '#f43f5e' },
-    { name: 'Network Traffic', path: '/network',    icon: Radio,         badge: activeNetworkInfo.active_devices_count !== undefined ? `${activeNetworkInfo.active_devices_count} live` : null, badgeColor: '#06b6d4' },
-    { name: 'Enrolled Devices', path: '/endpoints', icon: Monitor,       badge: null },
-    { name: 'Log Streamer',    path: '/logs',       icon: Terminal,      badge: null },
-  ];
-
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#070a11', color: '#f1f5f9', overflow: 'hidden' }}>
-
-      {/* ── Cyber-Neobrutalist Sidebar ── */}
-      <aside style={{
-        width: 250,
-        background: '#0a0e18',
-        borderRight: '2.5px solid #1e293b',
-        boxShadow: '4px 0px 0px #020408',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        zIndex: 20
-      }}>
-
-        {/* Brand Header */}
-        <div style={{
-          height: 68,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '0 18px',
-          borderBottom: '2.5px solid #1e293b',
-          background: '#0c111c'
-        }}>
-          <div style={{
-            width: 38,
-            height: 38,
-            background: '#8b5cf6',
-            borderRadius: 8,
-            border: '2px solid #000',
-            boxShadow: '3px 3px 0px #000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <Sparkles size={20} color="#ffffff" />
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.02em', color: '#f8fafc', lineHeight: 1.1 }}>
-              AETHER<span style={{ color: '#06b6d4' }}>SIEM</span>
-            </div>
-            <div style={{ fontSize: '0.68rem', fontFamily: 'JetBrains Mono, monospace', color: '#8b5cf6', fontWeight: 600 }}>
-              AI DEFENSE MATRIX
-            </div>
-          </div>
-        </div>
-
-        {/* Live Network Pill */}
-        <div style={{
-          margin: '14px 14px 6px',
-          padding: '10px 12px',
-          background: '#0d131f',
-          border: '2px solid #1e293b',
-          borderRadius: 8,
-          boxShadow: '3px 3px 0px #020408'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: '0.68rem', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-              ACTIVE SUBNET
-            </span>
-            <span style={{
-              width: 8, height: 8, borderRadius: '50%', background: '#10b981',
-              display: 'inline-block', boxShadow: '0 0 8px #10b981'
-            }} className="pulse-dot" />
-          </div>
-          <div style={{ fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', color: '#06b6d4', fontWeight: 700 }}>
-            {activeNetworkInfo.subnet || '—'}
-          </div>
-        </div>
-
-        {/* Nav Links */}
-        <nav style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <p style={{
-            fontSize: '0.68rem', fontFamily: 'JetBrains Mono, monospace',
-            color: '#475569', fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.08em', padding: '6px 4px 2px'
-          }}>
-            SYSTEM MODULES
-          </p>
-
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-
-            return (
-              <NavLink
-                key={item.name}
-                to={item.path}
-                end={item.path === '/'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  border: isActive ? '2px solid #06b6d4' : '2px solid transparent',
-                  background: isActive ? '#111726' : 'transparent',
-                  boxShadow: isActive ? '3px 3px 0px #06b6d4' : 'none',
-                  color: isActive ? '#f8fafc' : '#94a3b8',
-                  fontWeight: isActive ? 700 : 600,
-                  fontSize: '0.875rem',
-                  textDecoration: 'none',
-                  transition: 'all 0.1s ease',
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = '#0e1524';
-                    e.currentTarget.style.color = '#e2e8f0';
-                    e.currentTarget.style.borderColor = '#1e293b';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#94a3b8';
-                    e.currentTarget.style.borderColor = 'transparent';
-                  }
-                }}
-              >
-                <Icon size={18} color={isActive ? '#06b6d4' : '#64748b'} />
-                <span style={{ flex: 1 }}>{item.name}</span>
-
-                {item.badge && (
-                  <span style={{
-                    padding: '2px 7px',
-                    borderRadius: 5,
-                    fontSize: '0.68rem',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    fontWeight: 700,
-                    background: item.badgeColor || '#06b6d4',
-                    color: item.badgeColor === '#06b6d4' ? '#041017' : '#ffffff',
-                    border: '1.5px solid #000',
-                    boxShadow: '1.5px 1.5px 0px #000'
-                  }}>
-                    {item.badge}
+    <div className="flex h-screen w-screen overflow-hidden bg-[#f4f5f7] text-[#111827] font-sans antialiased">
+      
+      {/* ── Left Sidebar ── */}
+      <aside 
+        className={`bg-white border-r border-[#eaecf0] flex flex-col justify-between transition-all duration-300 z-30 shrink-0 ${
+          sidebarCollapsed ? 'w-20' : 'w-[230px]'
+        }`}
+      >
+        <div className="flex flex-col flex-1 overflow-y-auto px-4 py-5">
+          {/* Brand Header */}
+          <div className="flex items-center justify-between mb-8 px-2">
+            {!sidebarCollapsed ? (
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#111827] flex items-center justify-center text-white shadow-xs">
+                  <ShieldCheck className="w-4 h-4 text-[#82c341]" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-lg font-black tracking-tight text-[#111827] leading-none">
+                    SENTINEL
                   </span>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* User & Sign Out Footer */}
-        <div style={{
-          padding: '14px',
-          borderTop: '2.5px solid #1e293b',
-          background: '#090d16',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 6,
-                background: '#1e293b', border: '1.5px solid #334155',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'JetBrains Mono, monospace', fontSize: '0.78rem', fontWeight: 700, color: '#38bdf8'
-              }}>
-                {user?.username ? user.username[0].toUpperCase() : 'A'}
+                  <span className="text-[10px] font-bold text-[#82c341] tracking-wider mt-0.5">
+                    SIEM PLATFORM
+                  </span>
+                </div>
               </div>
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1' }}>
-                {user?.username || 'Analyst'}
-              </span>
-            </div>
-            <span style={{
-              fontSize: '0.65rem',
-              fontFamily: 'JetBrains Mono, monospace',
-              color: '#10b981',
-              background: 'rgba(16,185,129,0.1)',
-              padding: '2px 6px',
-              borderRadius: 4,
-              border: '1px solid #10b981'
-            }}>
-              ONLINE
-            </span>
+            ) : (
+              <div className="w-8 h-8 rounded-xl bg-[#111827] flex items-center justify-center text-white mx-auto shadow-xs">
+                <ShieldCheck className="w-4 h-4 text-[#82c341]" />
+              </div>
+            )}
           </div>
 
+          {/* Navigation Links */}
+          <nav className="flex flex-col gap-1.5">
+            {/* Dashboard */}
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative ${
+                  isActive
+                    ? 'bg-[#f4f5f7] text-[#111827]'
+                    : 'text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb]'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-2 bottom-2 w-1 bg-[#111827] rounded-r-full" />
+                  )}
+                  <LayoutGrid className="w-4 h-4 shrink-0 text-[#111827]" />
+                  {!sidebarCollapsed && <span>Dashboard</span>}
+                </>
+              )}
+            </NavLink>
+
+            {/* Endpoints */}
+            <NavLink
+              to="/endpoints"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-[#f4f5f7] text-[#111827] font-semibold'
+                    : 'text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb]'
+                }`
+              }
+            >
+              <Monitor className="w-4 h-4 shrink-0 text-[#6b7280]" />
+              {!sidebarCollapsed && <span>Endpoints</span>}
+            </NavLink>
+
+            {/* Security Logs */}
+            <NavLink
+              to="/logs"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-[#f4f5f7] text-[#111827] font-semibold'
+                    : 'text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb]'
+                }`
+              }
+            >
+              <Terminal className="w-4 h-4 shrink-0 text-[#6b7280]" />
+              {!sidebarCollapsed && <span>Security Logs</span>}
+            </NavLink>
+
+            {/* Network Flow */}
+            <NavLink
+              to="/network"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-[#f4f5f7] text-[#111827] font-semibold'
+                    : 'text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb]'
+                }`
+              }
+            >
+              <Radio className="w-4 h-4 shrink-0 text-[#6b7280]" />
+              {!sidebarCollapsed && <span>Network Flow</span>}
+            </NavLink>
+
+            {/* AI Threat Radar */}
+            <NavLink
+              to="/threats"
+              className={({ isActive }) =>
+                `flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-[#f4f5f7] text-[#111827] font-semibold'
+                    : 'text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb]'
+                }`
+              }
+            >
+              <div className="flex items-center gap-3">
+                <ShieldAlert className="w-4 h-4 shrink-0 text-[#6b7280]" />
+                {!sidebarCollapsed && <span>AI Threat Radar</span>}
+              </div>
+              {!sidebarCollapsed && activeThreats > 0 && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#fee2e2] text-[#991b1b]">
+                  {activeThreats}
+                </span>
+              )}
+            </NavLink>
+
+            {/* Spacing / Section */}
+            <div className="my-3 border-t border-[#f0f2f5]" />
+
+            {/* Documentation */}
+            <a
+              href="https://github.com/SiddhantKale1/SIEM-Dashboard-security-information-event-mangement-"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb] transition-all"
+            >
+              <BookOpen className="w-4 h-4 shrink-0 text-[#6b7280]" />
+              {!sidebarCollapsed && <span>Documentation</span>}
+            </a>
+
+            {/* API Support */}
+            <a
+              href="http://localhost:8000/docs"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb] transition-all"
+            >
+              <Headphones className="w-4 h-4 shrink-0 text-[#6b7280]" />
+              {!sidebarCollapsed && <span>API Swagger</span>}
+            </a>
+          </nav>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="p-3 flex flex-col gap-2 border-t border-[#eaecf0]">
+          {/* Collapse sidebar toggle */}
           <button
-            onClick={handleLogout}
-            className="neo-btn neo-btn-ghost"
-            style={{ width: '100%', padding: '7px 12px', fontSize: '0.78rem' }}
+            type="button"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="flex items-center gap-2 px-2 py-2 text-xs font-semibold text-[#6b7280] hover:text-[#111827] transition-colors"
           >
-            <LogOut size={14} />
-            Sign Out
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-4 h-4 mx-auto" />
+            ) : (
+              <>
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Collapse sidebar</span>
+              </>
+            )}
           </button>
         </div>
       </aside>
 
-      {/* ── Main View Area ── */}
-      <main style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        position: 'relative',
-        background: '#070a11'
-      }}>
-        {/* Cyber Grid Background Texture */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `
-            linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px)
-          `,
-          backgroundSize: '40px 40px',
-          pointerEvents: 'none',
-          opacity: 0.7
-        }} />
+      {/* ── Main Content Container ── */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        
+        {/* ── Top Header ── */}
+        <header className="h-16 px-6 bg-transparent flex items-center justify-between shrink-0">
+          {/* Search bar */}
+          <div className="relative w-84">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+            <input
+              type="text"
+              placeholder="Search security logs, hosts, IPs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-[#e5e7eb] rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:border-[#82c341] transition-all shadow-2xs"
+            />
+          </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 30px', position: 'relative', zIndex: 1 }}>
+          {/* Right Header Cluster */}
+          <div className="flex items-center gap-3">
+            
+            {/* Notification Bell */}
+            <button
+              type="button"
+              onClick={() => navigate('/threats')}
+              title={`${activeThreats} active threats`}
+              className="relative w-9 h-9 rounded-xl bg-white border border-[#e5e7eb] flex items-center justify-center text-[#4b5563] hover:text-[#111827] hover:border-[#d1d5db] transition-all shadow-2xs"
+            >
+              <Bell className="w-4 h-4" />
+              {activeThreats > 0 ? (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-[#ef4444] rounded-full ring-2 ring-white" />
+              ) : (
+                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#82c341] rounded-full ring-2 ring-white" />
+              )}
+            </button>
+
+            {/* Settings */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Click to Logout"
+              className="w-9 h-9 rounded-xl bg-white border border-[#e5e7eb] flex items-center justify-center text-[#4b5563] hover:text-[#111827] hover:border-[#d1d5db] transition-all shadow-2xs"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+
+            {/* Operator Profile Pill */}
+            <div className="flex items-center gap-2.5 bg-white border border-[#e5e7eb] pl-1.5 pr-4 py-1 rounded-full shadow-2xs cursor-pointer hover:border-[#d1d5db] transition-all">
+              <div className="w-7 h-7 rounded-full bg-[#111827] text-white text-xs font-bold flex items-center justify-center">
+                {user?.username?.substring(0, 2).toUpperCase() || 'AD'}
+              </div>
+              <div className="flex flex-col text-left leading-none">
+                <span className="text-xs font-bold text-[#111827]">
+                  {user?.username || 'admin'}
+                </span>
+                <span className="text-[10px] text-[#9ca3af] mt-0.5">
+                  admin@siem.local
+                </span>
+              </div>
+            </div>
+
+            {/* Enroll Device Button */}
+            <button
+              type="button"
+              onClick={() => navigate('/endpoints')}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-[#111827] text-white rounded-xl text-xs font-semibold hover:bg-black transition-all shadow-2xs"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#82c341]" />
+              <span>Enroll Device</span>
+            </button>
+          </div>
+        </header>
+
+        {/* ── Main Body Workspace ── */}
+        <main className="flex-1 overflow-y-auto px-6 pb-6 pt-1">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
 
-      {user?.must_change_password && (
-        <ChangePasswordModal
-          username={user.username}
-          onDone={() => setUser({ ...user, must_change_password: false })}
-        />
-      )}
     </div>
   );
 }

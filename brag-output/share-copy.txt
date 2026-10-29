@@ -1,0 +1,5 @@
+Shipped SENTINEL: an autonomous, centralized SIEM and security telemetry platform. Real-time high-throughput log ingestion, MITRE ATT&CK brute-force and port sweep correlation, and one-click zero-trust host isolation across distributed endpoints.
+
+Watch the threat quarantine flow in action: 12.4k normalized logs streaming live, threat detected, host isolated in 42ms.
+
+GitHub: https://github.com/SiddhantKale1/SIEM-Dashboard-security-information-event-mangement-

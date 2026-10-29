@@ -1,481 +1,642 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  TrendingUp, 
-  Server, 
-  Flame, 
+  Radio, 
+  Activity, 
+  Monitor, 
   ArrowUpRight, 
+  ArrowDownLeft,
   RefreshCw,
-  Zap
+  Plus,
+  CheckCircle2
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [logVolume, setLogVolume] = useState<{ time: string; count: number }[]>([]);
-  const [logStats, setLogStats] = useState({ logs_today: 0, logs_total: 0, errors: 0, warnings: 0 });
-  const [aiStats, setAiStats] = useState({
+  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d'>('24h');
+  const [loading, setLoading] = useState(false);
+
+  // Live real data from backend
+  const [logStats, setLogStats] = useState({
+    logs_total: 0,
+    logs_today: 0,
+    errors: 0,
+    warnings: 0
+  });
+
+  const [hourlyLogs, setHourlyLogs] = useState<any[]>([]);
+  const [aiStats, setAiStats] = useState<any>({
     risk_score: 0,
     posture: 'SECURE',
     active_threats: 0,
     critical_threats: 0,
     total_anomalies: 0,
-    mitre_distribution: [] as { tactic: string; count: number }[]
+    mitre_distribution: []
   });
+
   const [networkInfo, setNetworkInfo] = useState<any>({
-    network: null,
+    network: { subnet: '192.168.29.0/24', gateway: '192.168.29.1' },
     active_devices_count: 0,
     aggregate_tx_bytes: 0,
     aggregate_rx_bytes: 0
   });
-  const [activeThreatsList, setActiveThreatsList] = useState<any[]>([]);
-  const [activeDevicesList, setActiveDevicesList] = useState<any[]>([]);
 
-  const loadDashboardData = useCallback(async () => {
+  const [recentIncidents, setRecentIncidents] = useState<any[]>([]);
+  const [activeDevices, setActiveDevices] = useState<any[]>([]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
-      const [hourlyRes, statsRes, aiRes, netRes, anomaliesRes, devRes] = await Promise.all([
-        api.get('/logs/hourly').catch(() => ({ data: [] })),
+      const [statsRes, hourlyRes, aiRes, netRes, devRes, anomRes] = await Promise.all([
         api.get('/logs/stats').catch(() => ({ data: { logs_today: 0, logs_total: 0, errors: 0, warnings: 0 } })),
-        api.get('/anomalies/stats').catch(() => ({ data: { risk_score: 0, posture: 'SECURE', active_threats: 0, critical_threats: 0, mitre_distribution: [] } })),
+        api.get(`/logs/hourly?timeframe=${timeRange}`).catch(() => ({ data: [] })),
+        api.get('/anomalies/stats').catch(() => ({ data: { risk_score: 0, posture: 'SECURE', active_threats: 0, mitre_distribution: [] } })),
         api.get('/network/traffic').catch(() => ({ data: {} })),
-        api.get('/anomalies?status=active&limit=4').catch(() => ({ data: { anomalies: [] } })),
-        api.get('/network/active').catch(() => ({ data: { devices: [] } }))
+        api.get('/network/active').catch(() => ({ data: { devices: [] } })),
+        api.get('/anomalies?status=active&limit=5').catch(() => ({ data: { anomalies: [] } }))
       ]);
 
-      setLogVolume(hourlyRes.data || []);
-      setLogStats(statsRes.data || {});
-      setAiStats(aiRes.data || {});
+      setLogStats(statsRes.data || { logs_today: 0, logs_total: 0, errors: 0, warnings: 0 });
+      setHourlyLogs(hourlyRes.data && hourlyRes.data.length > 0 ? hourlyRes.data : [
+        { time: '00:00', count: 0 },
+        { time: '04:00', count: 0 },
+        { time: '08:00', count: 0 },
+        { time: '12:00', count: 0 },
+        { time: '16:00', count: 0 },
+        { time: '20:00', count: 0 },
+        { time: '23:59', count: 0 },
+      ]);
+      setAiStats(aiRes.data || { risk_score: 0, posture: 'SECURE', active_threats: 0, mitre_distribution: [] });
       setNetworkInfo(netRes.data || {});
-      setActiveThreatsList(anomaliesRes.data?.anomalies || []);
-      setActiveDevicesList(devRes.data?.devices || []);
-    } catch (e) {
-      console.error("Dashboard fetch error:", e);
+      setActiveDevices(devRes.data?.devices || []);
+      setRecentIncidents(anomRes.data?.anomalies || []);
+    } catch (err) {
+      console.error("Dashboard telemetry error:", err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    loadDashboardData();
-    const interval = setInterval(loadDashboardData, 5000);
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 10000);
     return () => clearInterval(interval);
-  }, [loadDashboardData]);
+  }, [timeRange]);
 
-  const handleIsolateDevice = async (deviceId: string) => {
-    try {
-      await api.post(`/devices/${deviceId}/isolate`);
-      loadDashboardData();
-    } catch (err: any) {
-      alert(err?.response?.data?.detail || "Isolation failed");
-    }
+  const formatBytes = (bytes: number) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
   };
 
-  const getPostureColor = (posture: string) => {
-    switch (posture) {
-      case 'CRITICAL': return '#f43f5e';
-      case 'ELEVATED': return '#f59e0b';
-      case 'MONITORED': return '#06b6d4';
-      default: return '#10b981';
-    }
-  };
+  const onlineCount = activeDevices.filter(d => d.status === 'online' || d.current_network_state === 'online').length;
+  const isolatedCount = activeDevices.filter(d => d.status === 'isolated').length;
+  const offlineCount = Math.max(0, activeDevices.length - onlineCount - isolatedCount);
+
+  // Calculate severity distribution percentages
+  const totalLogged = logStats.logs_total || 0;
+  const errorCount = logStats.errors || 0;
+  const warnCount = logStats.warnings || 0;
+  const infoCount = Math.max(0, totalLogged - errorCount - warnCount);
+
+  const errorPct = totalLogged > 0 ? Math.round((errorCount / totalLogged) * 100) : 0;
+  const warnPct = totalLogged > 0 ? Math.round((warnCount / totalLogged) * 100) : 0;
+  const infoPct = totalLogged > 0 ? 100 - errorPct - warnPct : 100;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-      {/* Top Header Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', color: '#f8fafc' }}>
-              Command Bento
-            </h1>
-            <span className="neo-badge neo-badge-violet">
-              AI REAL-TIME ENGINE
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 max-w-[1600px] mx-auto pb-8 font-sans">
+      
+      {/* ── Left / Center Column (8 cols) ── */}
+      <div className="xl:col-span-8 flex flex-col gap-5">
+        
+        {/* ── 4 Top KPI Cards ── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-[22px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+            <span className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider block">
+              Total Ingested Logs
+            </span>
+            <div className="text-2xl font-extrabold text-[#111827] mt-1.5 tracking-tight">
+              {logStats.logs_total.toLocaleString()}
+            </div>
+            <span className="text-[11px] text-[#6b7280] mt-1 block">
+              Across managed fleet
             </span>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-            Autonomous threat detection, dynamic network telemetry, and permanent endpoint stream
-          </p>
+
+          <div className="bg-white rounded-[22px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+            <span className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider block">
+              Logs Ingested Today
+            </span>
+            <div className="text-2xl font-extrabold text-[#111827] mt-1.5 tracking-tight">
+              {logStats.logs_today.toLocaleString()}
+            </div>
+            <span className="text-[11px] text-[#65a30d] font-semibold mt-1 flex items-center gap-1">
+              <span>↗</span> Live aggregation
+            </span>
+          </div>
+
+          <div className="bg-white rounded-[22px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+            <span className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider block">
+              Active Threats
+            </span>
+            <div className={`text-2xl font-extrabold mt-1.5 tracking-tight ${aiStats.active_threats > 0 ? 'text-[#ef4444]' : 'text-[#111827]'}`}>
+              {aiStats.active_threats}
+            </div>
+            <span className="text-[11px] text-[#6b7280] mt-1 block">
+              {aiStats.active_threats > 0 ? 'Requires SOC action' : 'Zero active breaches'}
+            </span>
+          </div>
+
+          <div className="bg-white rounded-[22px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+            <span className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider block">
+              Connected Endpoints
+            </span>
+            <div className="text-2xl font-extrabold text-[#111827] mt-1.5 tracking-tight">
+              {activeDevices.length}
+            </div>
+            <span className="text-[11px] text-[#65a30d] font-semibold mt-1 flex items-center gap-1">
+              ● {onlineCount} online
+            </span>
+          </div>
         </div>
 
-        {/* Quick Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button 
-            onClick={() => loadDashboardData()}
-            className="neo-btn neo-btn-ghost"
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
-          >
-            <RefreshCw size={14} /> Refresh
-          </button>
-          <button 
-            onClick={() => navigate('/simulator')}
-            className="neo-btn neo-btn-violet"
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
-          >
-            <Flame size={14} /> Attack Lab
-          </button>
-          <button 
-            onClick={() => navigate('/endpoints')}
-            className="neo-btn neo-btn-cyan"
-            style={{ padding: '8px 14px', fontSize: '0.8rem' }}
-          >
-            <Zap size={14} /> Deploy Agent
-          </button>
-        </div>
-      </div>
-
-      {/* ── BENTO GRID ── */}
-      <div className="bento-grid">
-
-        {/* BENTO TILE 1: AI Defense Matrix (Span 8) */}
-        <div 
-          className="bento-card" 
-          style={{ 
-            gridColumn: 'span 8', 
-            padding: 24, 
-            borderColor: aiStats.critical_threats > 0 ? '#f43f5e' : aiStats.active_threats > 0 ? '#f59e0b' : '#1e293b'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+        {/* ── Main Ingestion Telemetry Chart Card ── */}
+        <div className="bg-white rounded-[24px] p-6 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="neo-badge" style={{ background: '#8b5cf6', color: '#fff' }}>
-                  AI THREAT RADAR
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-extrabold text-[#111827] tracking-tight">
+                  Telemetry Ingestion Stream
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#dcfce7] text-[#166534]">
+                  REAL-TIME
                 </span>
-                <span className="pulse-dot" style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: getPostureColor(aiStats.posture)
-                }} />
               </div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '8px 0 2px', color: '#f8fafc' }}>
-                System Threat Posture: <span style={{ color: getPostureColor(aiStats.posture) }}>{aiStats.posture}</span>
-              </h2>
-              <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
-                Multi-signal heuristic & statistical anomaly evaluation active
+              <p className="text-xs text-[#9ca3af] mt-0.5 font-medium">
+                Hourly syslog and telemetry distribution received by API gateway
               </p>
             </div>
 
-            {/* Risk Score Circle */}
-            <div style={{
-              background: '#070a11',
-              border: `2.5px solid ${getPostureColor(aiStats.posture)}`,
-              borderRadius: 12,
-              padding: '10px 18px',
-              textAlign: 'center',
-              boxShadow: `3px 3px 0px ${getPostureColor(aiStats.posture)}`
-            }}>
-              <div style={{ fontSize: '0.68rem', fontFamily: 'JetBrains Mono, monospace', color: '#94a3b8', fontWeight: 700 }}>
-                RISK SCORE
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: getPostureColor(aiStats.posture), lineHeight: 1 }}>
-                {aiStats.risk_score}
-                <span style={{ fontSize: '0.9rem', color: '#64748b' }}>/100</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <select 
+                aria-label="Select timeframe"
+                className="siem-select text-xs py-1 px-3 border border-[#e5e7eb] rounded-full text-[#4b5563] bg-white cursor-pointer font-medium"
+                value={timeRange}
+                onChange={(e: any) => setTimeRange(e.target.value)}
+              >
+                <option value="1h">Live (Last 60 Mins)</option>
+                <option value="24h">Past 24 Hours</option>
+                <option value="7d">Past 7 Days</option>
+              </select>
+
+              <button 
+                type="button"
+                onClick={fetchDashboardData}
+                disabled={loading}
+                className="p-1.5 rounded-xl border border-[#e5e7eb] text-[#4b5563] hover:text-[#111827] transition-colors"
+                title="Refresh Telemetry"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#82c341]' : ''}`} />
+              </button>
             </div>
           </div>
 
-          {/* Quick Threat Metrics Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 16 }}>
-            <div style={{ background: '#0a0f1a', border: '2px solid #1e293b', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>ACTIVE THREATS</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: aiStats.active_threats > 0 ? '#f43f5e' : '#10b981', marginTop: 4 }}>
-                {aiStats.active_threats}
-              </div>
-            </div>
-            <div style={{ background: '#0a0f1a', border: '2px solid #1e293b', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>CRITICAL INCIDENTS</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: aiStats.critical_threats > 0 ? '#f43f5e' : '#94a3b8', marginTop: 4 }}>
-                {aiStats.critical_threats}
-              </div>
-            </div>
-            <div style={{ background: '#0a0f1a', border: '2px solid #1e293b', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>MITRE TACTICS HIT</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#8b5cf6', marginTop: 4 }}>
-                {aiStats.mitre_distribution?.length || 0}
-              </div>
-            </div>
-            <div style={{ background: '#0a0f1a', border: '2px solid #1e293b', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>RESOLVED ATTACKS</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981', marginTop: 4 }}>
-                {aiStats.total_anomalies - aiStats.active_threats}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* BENTO TILE 2: Active Network Pulse (Span 4) */}
-        <div className="bento-card bento-card-cyan" style={{ gridColumn: 'span 4', padding: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span className="neo-badge neo-badge-cyan">
-              NETWORK PULSE
-            </span>
-            <span style={{ fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', color: '#06b6d4', fontWeight: 700 }}>
-              {networkInfo.network?.subnet || '—'}
-            </span>
-          </div>
-
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 4px' }}>
-            Current Connected Scope
-          </h3>
-          <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 16px' }}>
-            Only displays systems actively communicating on current network
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#080c14', borderRadius: 6, border: '1.5px solid #1e293b' }}>
-              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Live Nodes on Subnet:</span>
-              <span style={{ fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: '#10b981' }}>
-                {networkInfo.active_devices_count || 0} active
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#080c14', borderRadius: 6, border: '1.5px solid #1e293b' }}>
-              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Default Gateway:</span>
-              <span style={{ fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#38bdf8' }}>
-                {networkInfo.network?.gateway || '—'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#080c14', borderRadius: 6, border: '1.5px solid #1e293b' }}>
-              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Session History Count:</span>
-              <span style={{ fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#c084fc' }}>
-                {networkInfo.history_sessions_count || 0} past sessions
-              </span>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => navigate('/network')}
-            className="neo-btn neo-btn-ghost" 
-            style={{ width: '100%', marginTop: 16, padding: '8px 12px', fontSize: '0.8rem' }}
-          >
-            View Network Traffic & History <ArrowUpRight size={14} />
-          </button>
-        </div>
-
-        {/* BENTO TILE 3: Real-Time Log Volume Area Chart (Span 8) */}
-        <div className="bento-card" style={{ gridColumn: 'span 8', padding: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <TrendingUp size={18} color="#06b6d4" />
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
-                Log Ingestion Velocity (Last 24 Hours)
-              </h3>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span className="mono-pill">Total: {logStats.logs_today || 0}</span>
-              <span className="mono-pill" style={{ borderColor: '#f43f5e', color: '#f43f5e' }}>Errors: {logStats.errors || 0}</span>
-              <span className="mono-pill" style={{ borderColor: '#f59e0b', color: '#f59e0b' }}>Warnings: {logStats.warnings || 0}</span>
-            </div>
-          </div>
-
-          <div style={{ height: 210 }}>
+          {/* Area Chart */}
+          <div className="h-56 pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={logVolume} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+              <AreaChart data={hourlyLogs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.0} />
+                  <linearGradient id="telemetryGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#82c341" stopOpacity={0.35}/>
+                    <stop offset="95%" stopColor="#82c341" stopOpacity={0.0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="time" stroke="#475569" tick={{ fontSize: 11 }} tickLine={false} />
-                <YAxis stroke="#475569" tick={{ fontSize: 11 }} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: '#0b0f19', border: '2px solid #06b6d4', borderRadius: 8, color: '#f8fafc', boxShadow: '3px 3px 0px #000' }}
-                  labelStyle={{ color: '#38bdf8', fontWeight: 700 }}
+                <XAxis 
+                  dataKey="time" 
+                  stroke="#9ca3af" 
+                  fontSize={11} 
+                  tickLine={false} 
+                  axisLine={{ stroke: '#f0f2f5' }}
+                />
+                <YAxis 
+                  stroke="#9ca3af" 
+                  fontSize={11} 
+                  tickLine={false} 
+                  axisLine={{ stroke: '#f0f2f5' }}
+                  allowDecimals={false}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#ffffff', 
+                    borderRadius: 12, 
+                    border: '1px solid #e5e7eb', 
+                    fontSize: 12,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                  }}
+                  formatter={(val: any) => [`${val} logs`, 'Volume']}
+                  labelFormatter={(lbl) => `Time: ${lbl}`}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="count" 
-                  stroke="#06b6d4" 
+                  stroke="#82c341" 
                   strokeWidth={2.5} 
-                  fill="url(#gradCyan)" 
+                  fill="url(#telemetryGradient)" 
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
 
-        {/* BENTO TILE 4: Active Threat Stream (Span 4) */}
-        <div className="bento-card bento-card-coral" style={{ gridColumn: 'span 4', padding: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span className="neo-badge neo-badge-critical">
-              INCIDENT STREAM
+          <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#f4f5f7] text-xs text-[#6b7280]">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#82c341]" />
+              <span>Log Volume Stream</span>
             </span>
             <button 
-              onClick={() => navigate('/threats')}
-              style={{ background: 'none', border: 'none', color: '#f43f5e', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+              type="button" 
+              onClick={() => navigate('/logs')}
+              className="font-semibold text-[#111827] hover:text-[#82c341] flex items-center gap-1 transition-colors"
             >
-              All Threats &rarr;
+              <span>Explore Raw Stream</span>
+              <span>→</span>
             </button>
-          </div>
-
-          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 12px' }}>
-            Latest AI Detections
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 220, overflowY: 'auto' }}>
-            {activeThreatsList.length === 0 ? (
-              <div style={{
-                padding: '24px 12px', textAlign: 'center', background: '#080c14',
-                borderRadius: 8, border: '1.5px solid #1e293b', color: '#64748b'
-              }}>
-                <div style={{ color: '#10b981', fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>No Active Threats</div>
-                <div style={{ fontSize: '0.75rem' }}>AI Detection Engine is monitoring all streams.</div>
-              </div>
-            ) : (
-              activeThreatsList.map((anom: any) => (
-                <div 
-                  key={anom._id} 
-                  style={{
-                    background: '#090d16',
-                    border: '1.5px solid #1e293b',
-                    borderLeft: `4px solid ${anom.severity === 'critical' ? '#f43f5e' : '#f59e0b'}`,
-                    borderRadius: 6,
-                    padding: '8px 10px'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f1f5f9' }}>
-                      {anom.title?.slice(0, 32)}...
-                    </span>
-                    <span className={`neo-badge neo-badge-${anom.severity}`}>
-                      {anom.mitre_id || anom.severity}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: '#06b6d4', fontWeight: 800 }}>🖥️ {anom.hostname}</span>
-                      {anom.ip_address && (
-                        <span style={{ color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem' }}>
-                          ({anom.ip_address})
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {anom.device_id && (
-                        <button 
-                          onClick={() => navigate(`/devices/${anom.device_id}`)}
-                          style={{
-                            background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', border: '1px solid rgba(6, 182, 212, 0.4)',
-                            fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4, cursor: 'pointer'
-                          }}
-                        >
-                          Inspect
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleIsolateDevice(anom.device_id)}
-                        style={{
-                          background: '#f43f5e', color: '#fff', border: '1px solid #000',
-                          fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4, cursor: 'pointer'
-                        }}
-                      >
-                        Isolate
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         </div>
 
-        {/* BENTO TILE 5: Current Network Active Systems (Span 12) */}
-        <div className="bento-card" style={{ gridColumn: 'span 12', padding: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Server size={18} color="#10b981" />
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc' }}>
-                  Connected Systems on Active Network ({activeDevicesList.length})
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
-                  Dynamically updated: past networks & offline sessions are moved to the Connection History tab
+        {/* ── Row 2: 3 Core SIEM Analytics Cards ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          
+          {/* Card 1: Log Level Distribution */}
+          <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div>
+              <h4 className="text-sm font-bold text-[#111827]">
+                Log Severity Breakdown
+              </h4>
+              <p className="text-[11px] text-[#9ca3af] font-medium mt-0.5">
+                Classification distribution
+              </p>
+
+              <div className="mt-4">
+                <span className="text-2xl font-extrabold text-[#111827]">
+                  {logStats.logs_total.toLocaleString()}
+                </span>
+                <span className="text-xs text-[#9ca3af] ml-1">total logs</span>
+
+                {/* Segmented bar */}
+                <div className="w-full h-3 bg-[#f3f4f6] rounded-full overflow-hidden flex gap-0.5 mt-2.5">
+                  <div className="bg-[#82c341] h-full" style={{ width: `${infoPct}%` }} title={`Info: ${infoPct}%`} />
+                  <div className="bg-[#facc15] h-full" style={{ width: `${warnPct}%` }} title={`Warning: ${warnPct}%`} />
+                  <div className="bg-[#ef4444] h-full" style={{ width: `${errorPct}%` }} title={`Error: ${errorPct}%`} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-4 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-[#4b5563]">
+                  <span className="w-2 h-2 rounded-full bg-[#82c341]" />
+                  <span>Information</span>
+                </span>
+                <span className="font-bold text-[#111827]">{infoCount.toLocaleString()} ({infoPct}%)</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-[#4b5563]">
+                  <span className="w-2 h-2 rounded-full bg-[#facc15]" />
+                  <span>Warnings</span>
+                </span>
+                <span className="font-bold text-[#111827]">{warnCount.toLocaleString()} ({warnPct}%)</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-[#4b5563]">
+                  <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                  <span>Errors &amp; Alerts</span>
+                </span>
+                <span className="font-bold text-[#111827]">{errorCount.toLocaleString()} ({errorPct}%)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Security Posture Index */}
+          <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-[#111827]">
+                    Security Posture Score
+                  </h4>
+                  <p className="text-[11px] text-[#9ca3af] font-medium mt-0.5">
+                    Fleet health compliance
+                  </p>
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  aiStats.posture === 'SECURE' ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[#fee2e2] text-[#991b1b]'
+                }`}>
+                  {aiStats.posture}
+                </span>
+              </div>
+
+              <div className="mt-3">
+                <div className="text-2xl font-extrabold text-[#111827]">
+                  {Math.max(0, 100 - (aiStats.risk_score || 0))} / 100
+                </div>
+                <p className="text-[11px] text-[#65a30d] font-semibold mt-0.5">
+                  ● Autonomous validation active
                 </p>
               </div>
             </div>
-            <button 
-              onClick={() => navigate('/network')}
-              className="neo-btn neo-btn-ghost"
-              style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+
+            {/* Clean Semi-circle Radial Gauge SVG */}
+            <div className="relative flex flex-col items-center justify-center my-2">
+              <svg className="w-40 h-22 overflow-visible" viewBox="0 0 100 55">
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#f3f4f6"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 10 50 A 40 40 0 0 1 82 22"
+                  fill="none"
+                  stroke="url(#postureGradient)"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient id="postureGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#a3e635" />
+                    <stop offset="100%" stopColor="#82c341" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <div className="absolute bottom-0 text-center flex flex-col items-center">
+                <span className="text-2xl font-black text-[#111827] leading-none">
+                  {Math.max(0, 100 - (aiStats.risk_score || 0))}%
+                </span>
+                <span className="text-[10px] text-[#9ca3af] font-medium mt-0.5">
+                  System Health Index
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-[#9ca3af] text-center leading-tight">
+              Aggregated from real-time agent heartbeats and threat heuristics
+            </p>
+          </div>
+
+          {/* Card 3: MITRE ATT&CK Detections */}
+          <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-[#111827]">
+                  MITRE ATT&amp;CK Radar
+                </h4>
+                <p className="text-[11px] text-[#9ca3af] font-medium mt-0.5">
+                  Hostile tactics detected
+                </p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => navigate('/threats')}
+                className="text-[11px] font-bold text-[#111827] hover:text-[#82c341] transition-colors"
+              >
+                Radar →
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-4 text-xs">
+              {!aiStats.mitre_distribution || aiStats.mitre_distribution.length === 0 ? (
+                <div className="text-center py-6 text-xs text-[#9ca3af]">
+                  <CheckCircle2 className="w-8 h-8 text-[#82c341] mx-auto mb-2" />
+                  <p className="font-bold text-[#111827]">No Hostile Vectors</p>
+                  <p className="text-[11px] mt-0.5">All monitored hosts operating within baseline</p>
+                </div>
+              ) : (
+                aiStats.mitre_distribution.slice(0, 4).map((m: any) => (
+                  <div key={m.tactic} className="flex items-center justify-between bg-[#f9fafb] border border-[#f0f2f5] rounded-xl px-3 py-2">
+                    <span className="font-semibold text-[#111827] truncate max-w-[140px]">{m.tactic}</span>
+                    <span className="font-extrabold text-[#ef4444] text-xs">{m.count} hits</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/threats')}
+              className="w-full mt-3 py-2 text-center text-xs font-semibold text-[#6b7280] hover:text-[#111827] border-t border-[#f4f5f7] transition-colors"
             >
-              Network Center &rarr;
+              View Threat Engine →
             </button>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>
-                  <th style={{ padding: '8px 12px' }}>STATUS</th>
-                  <th style={{ padding: '8px 12px' }}>HOSTNAME</th>
-                  <th style={{ padding: '8px 12px' }}>IP ADDRESS</th>
-                  <th style={{ padding: '8px 12px' }}>MAC ADDRESS</th>
-                  <th style={{ padding: '8px 12px' }}>OS</th>
-                  <th style={{ padding: '8px 12px' }}>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeDevicesList.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ padding: '24px 12px', textAlign: 'center', color: '#475569' }}>
-                      No active systems currently reporting on {networkInfo.network?.subnet || 'local network'}.
-                    </td>
-                  </tr>
-                ) : (
-                  activeDevicesList.slice(0, 6).map((dev: any) => (
-                    <tr 
-                      key={dev._id} 
-                      style={{ borderBottom: '1px solid #151d2e', transition: 'background 0.1s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#0e1524'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <td style={{ padding: '10px 12px' }}>
-                        <span className={`neo-badge neo-badge-${dev.status === 'isolated' ? 'isolated' : dev.current_network_state === 'online' ? 'online' : 'offline'}`}>
-                          {dev.status === 'isolated' ? 'ISOLATED' : dev.current_network_state || 'ONLINE'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#f1f5f9' }}>
-                        {dev.hostname || 'Unknown Host'}
-                      </td>
-                      <td style={{ padding: '10px 12px', fontFamily: 'JetBrains Mono, monospace', color: '#38bdf8' }}>
-                        {dev.ip_address}
-                      </td>
-                      <td style={{ padding: '10px 12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
-                        {dev.mac_address}
-                      </td>
-                      <td style={{ padding: '10px 12px', textTransform: 'capitalize', color: '#cbd5e1' }}>
-                        {dev.os}
-                      </td>
-                      <td style={{ padding: '10px 12px' }}>
-                        {dev.status === 'isolated' ? (
-                          <button
-                            onClick={() => api.post(`/devices/${dev.device_id}/restore`).then(() => loadDashboardData())}
-                            className="neo-btn neo-btn-emerald"
-                            style={{ padding: '4px 8px', fontSize: '0.7rem' }}
-                          >
-                            Restore
-                          </button>
-                        ) : dev.device_id ? (
-                          <button
-                            onClick={() => handleIsolateDevice(dev.device_id)}
-                            className="neo-btn neo-btn-coral"
-                            style={{ padding: '4px 8px', fontSize: '0.7rem' }}
-                          >
-                            Isolate
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: '0.7rem', color: '#475569' }}>Unmanaged</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
 
       </div>
+
+      {/* ── Right Column (4 cols) ── */}
+      <div className="xl:col-span-4 flex flex-col gap-5">
+        
+        {/* ── Fleet Endpoint Status Card (NO CREDIT CARDS!) ── */}
+        <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#111827]">
+                Fleet Endpoint Status
+              </h3>
+              <p className="text-[11px] text-[#9ca3af] font-medium">Monitored Agent Systems</p>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => navigate('/endpoints')}
+              className="text-xs font-bold text-[#111827] hover:text-[#82c341] flex items-center gap-1 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#82c341]" />
+              <span>Enroll Device</span>
+            </button>
+          </div>
+
+          {/* Endpoint Status Counters Grid */}
+          <div className="grid grid-cols-3 gap-2.5 mb-4">
+            <div className="bg-[#f0fdf4] border border-[#dcfce7] rounded-2xl p-3 text-center">
+              <span className="text-[10px] font-bold text-[#166534] uppercase block">ONLINE</span>
+              <span className="text-xl font-extrabold text-[#166534] mt-0.5 block">{onlineCount}</span>
+            </div>
+            <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-2xl p-3 text-center">
+              <span className="text-[10px] font-bold text-[#4b5563] uppercase block">OFFLINE</span>
+              <span className="text-xl font-extrabold text-[#4b5563] mt-0.5 block">{offlineCount}</span>
+            </div>
+            <div className="bg-[#fef2f2] border border-[#fee2e2] rounded-2xl p-3 text-center">
+              <span className="text-[10px] font-bold text-[#991b1b] uppercase block">ISOLATED</span>
+              <span className="text-xl font-extrabold text-[#991b1b] mt-0.5 block">{isolatedCount}</span>
+            </div>
+          </div>
+
+          {/* Quick Subnet Info Banner */}
+          <div className="bg-[#f9fafb] border border-[#f0f2f5] rounded-xl p-3 text-xs font-mono mb-4 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-[#9ca3af] block">ACTIVE SUBNET</span>
+              <span className="font-bold text-[#111827]">{networkInfo.network?.subnet || '192.168.29.0/24'}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-[#9ca3af] block">GATEWAY</span>
+              <span className="font-semibold text-[#6b7280]">{networkInfo.network?.gateway || '192.168.29.1'}</span>
+            </div>
+          </div>
+
+          {/* 4 SIEM Action Buttons */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => navigate('/endpoints')}
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-[#111827] text-white rounded-xl text-xs font-semibold hover:bg-black transition-colors"
+            >
+              <Monitor className="w-3.5 h-3.5 text-[#82c341]" />
+              <span>Fleet Roster</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/network')}
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white border border-[#e5e7eb] text-[#111827] rounded-xl text-xs font-semibold hover:bg-[#f9fafb] transition-colors"
+            >
+              <Radio className="w-3.5 h-3.5 text-[#3b82f6]" />
+              <span>Subnet Sweep</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Network Traffic Telemetry Card ── */}
+        <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#111827]">
+                Network Telemetry
+              </h3>
+              <p className="text-[11px] text-[#9ca3af] font-medium">Real-time socket I/O</p>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => navigate('/network')}
+              className="text-[#9ca3af] hover:text-[#111827]"
+            >
+              <Activity className="w-4 h-4 text-[#82c341]" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mt-1">
+            <div className="bg-[#f9fafb] border border-[#f0f2f5] rounded-2xl p-3 flex flex-col">
+              <span className="text-[10px] font-semibold text-[#9ca3af] flex items-center gap-1">
+                <ArrowDownLeft className="w-3 h-3 text-[#82c341]" />
+                INBOUND (RX)
+              </span>
+              <span className="text-base font-extrabold text-[#111827] mt-1 font-mono">
+                {formatBytes(networkInfo.aggregate_rx_bytes || 0)}
+              </span>
+              <span className="text-[10px] text-[#65a30d] font-medium mt-0.5">
+                ● Connected flow
+              </span>
+            </div>
+
+            <div className="bg-[#f9fafb] border border-[#f0f2f5] rounded-2xl p-3 flex flex-col">
+              <span className="text-[10px] font-semibold text-[#9ca3af] flex items-center gap-1">
+                <ArrowUpRight className="w-3 h-3 text-[#3b82f6]" />
+                OUTBOUND (TX)
+              </span>
+              <span className="text-base font-extrabold text-[#111827] mt-1 font-mono">
+                {formatBytes(networkInfo.aggregate_tx_bytes || 0)}
+              </span>
+              <span className="text-[10px] text-[#3b82f6] font-medium mt-0.5">
+                ● Telemetry channel
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Live Incident Stream (Replacing fake transactions!) ── */}
+        <div className="bg-white rounded-[24px] p-5 border border-[#f0f2f5] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex-1 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-extrabold text-[#111827]">
+                  Recent Security Incidents
+                </h3>
+                <p className="text-[11px] text-[#9ca3af] font-medium">Active behavioral detections</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => navigate('/threats')}
+                className="text-xs font-bold text-[#111827] hover:text-[#82c341] transition-colors"
+              >
+                All Threats →
+              </button>
+            </div>
+
+            {/* List of real security incidents */}
+            <div className="flex flex-col gap-2.5">
+              {recentIncidents.length === 0 ? (
+                <div className="text-center py-8 text-xs text-[#9ca3af]">
+                  <CheckCircle2 className="w-7 h-7 text-[#82c341] mx-auto mb-2" />
+                  <p className="font-bold text-[#111827]">No Active Threats</p>
+                  <p className="text-[11px] mt-0.5">Zero unresolved behavioral anomalies detected</p>
+                </div>
+              ) : (
+                recentIncidents.map((incident: any) => {
+                  const isCrit = incident.severity === 'critical';
+                  const isHigh = incident.severity === 'high';
+                  return (
+                    <div 
+                      key={incident._id}
+                      onClick={() => navigate('/threats')}
+                      className="p-3 rounded-2xl border border-[#f0f2f5] hover:border-[#e5e7eb] bg-[#fcfcfd] hover:bg-white cursor-pointer transition-all flex items-start justify-between gap-3"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[9px] font-bold px-2 py-0.2 rounded-full uppercase ${
+                            isCrit ? 'bg-[#fee2e2] text-[#991b1b]' : isHigh ? 'bg-[#ffedd5] text-[#9a3412]' : 'bg-[#fef9c3] text-[#854d0e]'
+                          }`}>
+                            {incident.severity}
+                          </span>
+                          <span className="text-[10px] font-mono text-[#9ca3af]">
+                            {incident.hostname}
+                          </span>
+                        </div>
+                        <h5 className="text-xs font-extrabold text-[#111827] line-clamp-1">
+                          {incident.title}
+                        </h5>
+                        <p className="text-[11px] text-[#6b7280] line-clamp-1 mt-0.5">
+                          {incident.summary}
+                        </p>
+                      </div>
+
+                      <span className="text-[10px] text-[#9ca3af] whitespace-nowrap mt-1">
+                        {new Date(incident.detected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            onClick={() => navigate('/logs')}
+            className="w-full mt-4 py-2 text-center text-xs font-semibold text-[#6b7280] hover:text-[#111827] border-t border-[#f4f5f7] transition-colors"
+          >
+            Open Centralized Log Stream →
+          </button>
+        </div>
+
+      </div>
+
     </div>
   );
 }

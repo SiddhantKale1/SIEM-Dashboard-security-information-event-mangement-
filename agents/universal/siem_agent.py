@@ -148,10 +148,38 @@ def get_hosts_file_path() -> str:
         return os.path.join(sys_root, "System32", "drivers", "etc", "hosts")
     return "/etc/hosts"
 
+def enforce_browser_dns_policies():
+    """
+    Forces Chrome, Edge, and Brave to strictly honor the Windows hosts file.
+    1. DnsOverHttpsMode = 'off': Disables encrypted DNS-over-HTTPS bypass.
+    2. BuiltInDnsClientEnabled = 0: Disables Chrome's internal async DNS resolver.
+    3. QuicAllowed = 0: Disables UDP 443 QUIC protocol (forces standard TCP/TLS).
+    """
+    if platform.system() != "Windows":
+        return
+    try:
+        commands = [
+            ['reg', 'add', r'HKLM\Software\Policies\Google\Chrome', '/v', 'DnsOverHttpsMode', '/t', 'REG_SZ', '/d', 'off', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\Google\Chrome', '/v', 'BuiltInDnsClientEnabled', '/t', 'REG_DWORD', '/d', '0', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\Google\Chrome', '/v', 'QuicAllowed', '/t', 'REG_DWORD', '/d', '0', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\Microsoft\Edge', '/v', 'DnsOverHttpsMode', '/t', 'REG_SZ', '/d', 'off', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\Microsoft\Edge', '/v', 'BuiltInDnsClientEnabled', '/t', 'REG_DWORD', '/d', '0', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\Microsoft\Edge', '/v', 'QuicAllowed', '/t', 'REG_DWORD', '/d', '0', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\BraveSoftware\Brave', '/v', 'DnsOverHttpsMode', '/t', 'REG_SZ', '/d', 'off', '/f'],
+            ['reg', 'add', r'HKLM\Software\Policies\BraveSoftware\Brave', '/v', 'BuiltInDnsClientEnabled', '/t', 'REG_DWORD', '/d', '0', '/f'],
+        ]
+        for cmd in commands:
+            subprocess.run(cmd, capture_output=True, timeout=3)
+    except Exception as e:
+        logger.debug(f"Browser policy enforcement warning: {e}")
+
 def flush_dns_cache():
     try:
         if platform.system() == "Windows":
             subprocess.run(["ipconfig", "/flushdns"], capture_output=True, timeout=5)
+            # Modern Windows 10/11 DNS cache clearing
+            subprocess.run(["powershell", "-NoProfile", "-Command", "Clear-DnsClientCache"], capture_output=True, timeout=5)
+            enforce_browser_dns_policies()
         else:
             if os.path.exists("/usr/bin/resolvectl"):
                 subprocess.run(["resolvectl", "flush-caches"], capture_output=True, timeout=5)
@@ -161,6 +189,39 @@ def flush_dns_cache():
                 subprocess.run(["nscd", "-i", "hosts"], capture_output=True, timeout=5)
     except Exception as e:
         logger.debug(f"DNS flush warning: {e}")
+
+def terminate_prohibited_connections(blocked_domains: List[str]):
+    """
+    Terminates active browser sockets connected to newly restricted domains
+    so existing open streaming video tabs are severed immediately.
+    """
+    if not blocked_domains:
+        return
+    try:
+        import psutil
+        blocked_set = set(d.lower() for d in blocked_domains)
+        has_yt = any("youtube" in b or "googlevideo" in b for b in blocked_set)
+        for c in psutil.net_connections(kind='inet'):
+            if c.raddr and c.status in ("ESTABLISHED", "SYN_SENT", "CLOSE_WAIT"):
+                r_ip = c.raddr.ip
+                dom = get_domain_for_ip(r_ip).lower()
+                is_match = False
+                if dom and any(b in dom or dom in b for b in blocked_set):
+                    is_match = True
+                elif has_yt and ("1e100.net" in dom or "googlevideo" in dom or "youtube" in dom or c.raddr.port == 5228):
+                    is_match = True
+
+                if is_match and c.pid:
+                    try:
+                        p = psutil.Process(c.pid)
+                        pname = p.name().lower()
+                        if pname in ("chrome.exe", "msedge.exe", "firefox.exe", "brave.exe", "opera.exe"):
+                            logger.info(f"Terminating prohibited active browser process: {pname} (PID {c.pid}) -> {r_ip} ({dom})")
+                            p.kill()
+                    except Exception:
+                        pass
+    except Exception:
+        pass
 
 def apply_domain_blocks(blocked_domains: List[str]) -> bool:
     hosts_path = get_hosts_file_path()
@@ -193,26 +254,40 @@ def apply_domain_blocks(blocked_domains: List[str]) -> bool:
                 "",
                 SIEM_BLOCK_HEADER,
                 "# Policy Enforced by SIEM Administrator (Prohibited Lab Websites)",
+                "# Prevents DNS-over-HTTPS bypass",
+                "0.0.0.0 chrome.cloudflare-dns.com",
+                "::1 chrome.cloudflare-dns.com",
+                "0.0.0.0 cloudflare-dns.com",
+                "::1 cloudflare-dns.com",
+                "0.0.0.0 dns.google",
+                "::1 dns.google",
+                "0.0.0.0 dns.quad9.net",
+                "::1 dns.quad9.net",
+                "0.0.0.0 doh.opendns.com",
+                "::1 doh.opendns.com",
             ]
             for domain in sorted(set(blocked_domains)):
                 d = domain.strip().lower()
                 if d:
+                    # IPv4 sinkhole
                     block_lines.append(f"0.0.0.0 {d}")
                     block_lines.append(f"127.0.0.1 {d}")
+                    # IPv6 sinkhole
+                    block_lines.append(f"::1 {d}")
+                    block_lines.append(f":: {d}")
             block_lines.append(SIEM_BLOCK_FOOTER)
             block_lines.append("")
             new_content = base_content.rstrip() + "\n" + "\n".join(block_lines)
         else:
             new_content = base_content.rstrip() + "\n"
 
-        if new_content == content:
-            return True
+        if new_content != content:
+            with open(hosts_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            logger.info(f"[+] Successfully enforced {len(blocked_domains)} blocked domains in {hosts_path}")
 
-        with open(hosts_path, "w", encoding="utf-8") as f:
-            f.write(new_content)
-
-        logger.info(f"[+] Successfully enforced {len(blocked_domains)} blocked domains in {hosts_path}")
         flush_dns_cache()
+        terminate_prohibited_connections(blocked_domains)
         return True
     except PermissionError:
         logger.warning(f"Permission denied modifying {hosts_path}. SIEM agent requires root/admin privileges to enforce website blocking.")

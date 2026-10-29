@@ -1,10 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
-
-class EnrollmentTokenResponse(BaseModel):
-    token: str
-    expires_at: datetime
 
 class DeviceRegistrationRequest(BaseModel):
     token: str

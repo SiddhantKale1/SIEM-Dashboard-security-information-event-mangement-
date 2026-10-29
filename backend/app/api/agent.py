@@ -68,19 +68,11 @@ async def agent_heartbeat(
         event_type="connected"
     )
 
-    # Fetch active content blocking policies for this endpoint
-    policy_doc = await db.policies.find_one({"policy_id": "global"})
-    active_blocked = list(policy_doc.get("blocked_domains", [])) if policy_doc else []
-    
-    dev_policy = await db.policies.find_one({"policy_id": f"device:{current_device['device_id']}"})
-    if dev_policy and dev_policy.get("blocked_domains"):
-        active_blocked = sorted(list(set(active_blocked + dev_policy.get("blocked_domains", []))))
-
     return {
         "status": "ok",
         "server_time": now.isoformat(),
         "policies": {
-            "blocked_domains": active_blocked
+            "blocked_domains": []
         }
     }
 

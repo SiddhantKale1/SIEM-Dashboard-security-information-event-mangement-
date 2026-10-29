@@ -199,9 +199,3 @@ async def get_connection_history(
         "total": len(records),
         "history": records
     }
-
-@router.get("/devices")
-async def get_legacy_network_devices(scan: bool = False, current_user: dict = Depends(get_current_user)):
-    """Legacy compatibility endpoint pointing to active devices."""
-    res = await get_active_network_devices(scan=scan, current_user=current_user)
-    return res["devices"]

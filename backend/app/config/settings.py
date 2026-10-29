@@ -39,11 +39,7 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     LOG_LEVEL: str = "INFO"
-    HEARTBEAT_INTERVAL: int = 30
-    METRIC_INTERVAL: int = 10
-    NETWORK_CONTROLLER: str = "mock"
     USE_MOCK_DB: bool = True
-    FRONTEND_ORIGIN: str = "http://localhost:5173"
     LOGIN_RATE_LIMIT: str = "200/minute"
 
     class Config:
@@ -54,4 +50,3 @@ settings = Settings()
 # Override JWT_SECRET with persistent secure value (unless explicitly set via env)
 if not os.environ.get("JWT_SECRET"):
     settings.JWT_SECRET = _load_or_create_jwt_secret()
-

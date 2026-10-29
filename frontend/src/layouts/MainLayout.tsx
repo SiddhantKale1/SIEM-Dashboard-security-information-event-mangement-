@@ -5,7 +5,6 @@ import {
   LayoutGrid, 
   Radio, 
   Terminal, 
-  Flame, 
   LogOut, 
   Sparkles,
   Monitor
@@ -56,7 +55,6 @@ export default function MainLayout() {
     { name: 'AI Threat Radar', path: '/threats',    icon: ShieldAlert,   badge: activeThreats > 0 ? activeThreats : null, badgeColor: '#f43f5e' },
     { name: 'Network Traffic', path: '/network',    icon: Radio,         badge: activeNetworkInfo.active_devices_count !== undefined ? `${activeNetworkInfo.active_devices_count} live` : null, badgeColor: '#06b6d4' },
     { name: 'Enrolled Devices', path: '/endpoints', icon: Monitor,       badge: null },
-    { name: 'Attack Lab',      path: '/simulator',  icon: Flame,         badge: 'SIM', badgeColor: '#8b5cf6' },
     { name: 'Log Streamer',    path: '/logs',       icon: Terminal,      badge: null },
   ];
 

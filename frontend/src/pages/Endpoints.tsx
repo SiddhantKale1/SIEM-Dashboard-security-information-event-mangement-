@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Copy, 
   Check, 
@@ -12,23 +12,31 @@ import {
   Terminal,
   ArrowRight,
   RefreshCw,
-  Search,
-  ShieldAlert
+  Search
 } from 'lucide-react';
 import api from '../services/api';
 import { copyToClipboard } from '../utils/clipboard';
 import { WindowsIcon, LinuxPenguinIcon } from '../components/OSIcons';
-import LabPolicyManager from '../components/LabPolicyManager';
 
-export default function Endpoints() {
+export default function Endpoints({ defaultTab }: { defaultTab?: 'view_devices' | 'installers' } = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [devices, setDevices] = useState<any[]>([]);
   const [tokens, setTokens] = useState<any[]>([]);
   const [activeInstallCommands, setActiveInstallCommands] = useState<{ linux: string; windows: string } | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
   const [generatingToken, setGeneratingToken] = useState(false);
-  const [activeTab, setActiveTab] = useState<'view_devices' | 'installers' | 'policies'>('view_devices');
+  const [activeTab, setActiveTab] = useState<'view_devices' | 'installers'>(() => {
+    if (defaultTab) return defaultTab;
+    return 'view_devices';
+  });
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab, location.pathname]);
 
   const loadData = async () => {
     try {
@@ -180,13 +188,7 @@ export default function Endpoints() {
           <Terminal size={15} /> 1-Click Installers (Linux &amp; Windows)
         </button>
 
-        <button
-          onClick={() => setActiveTab('policies')}
-          className={`neo-btn ${activeTab === 'policies' ? 'neo-btn-coral' : ''}`}
-          style={{ padding: '8px 16px', fontSize: '0.82rem', background: activeTab !== 'policies' ? '#0a0f1b' : undefined }}
-        >
-          <ShieldAlert size={15} /> 🛡️ Lab Policies &amp; Website Blocker
-        </button>
+        
       </div>
 
       {/* ── OPTION 1: VIEW ENROLLED DEVICES (CARDS & DETAIL ROSTER) ── */}
@@ -594,10 +596,6 @@ export default function Endpoints() {
         </div>
       )}
 
-      {/* ── OPTION 3: LAB POLICIES & CONTENT BLOCKER ── */}
-      {activeTab === 'policies' && (
-        <LabPolicyManager />
-      )}
     </div>
   );
 }

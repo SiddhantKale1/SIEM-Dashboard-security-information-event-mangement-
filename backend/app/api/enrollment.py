@@ -373,6 +373,14 @@ async def serve_windows_installer(request: Request):
 $ServerUrl = "{srv}"
 $Token = "{tok}"
 
+# Ensure Administrator privileges so hosts file and scheduled task can be written
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {{
+    Write-Host "[*] Requesting Administrator elevation to configure system hosts file & security task..." -ForegroundColor Yellow
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -Command `"irm '$ServerUrl/api/v1/enrollment/install.ps1?token=$Token&server=$ServerUrl' | iex`""
+    exit 0
+}}
+
 Write-Host "[*] Initializing SIEM Windows Permanent Agent Installer..." -ForegroundColor Cyan
 
 # Test python availability
@@ -457,7 +465,6 @@ async def serve_universal_agent():
         os.path.abspath(os.path.join(current_dir, "..", "..", "agents", "universal", "siem_agent.py")),
         os.path.join(os.getcwd(), "agents", "universal", "siem_agent.py"),
         os.path.join(os.getcwd(), "..", "agents", "universal", "siem_agent.py"),
-        "/home/sidd/SIEM/agents/universal/siem_agent.py"
     ]
     agent_path = next((p for p in candidate_paths if os.path.isfile(p)), None)
     if not agent_path:

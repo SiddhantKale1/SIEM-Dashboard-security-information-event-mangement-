@@ -124,6 +124,15 @@ export default function DeviceDetails() {
     }
   };
 
+  const handleQuickBlockDomain = async (domain: string) => {
+    try {
+      await api.post('/policies/domains', { domain });
+      showToast(`Domain '${domain}' added to fleet blocklist!`);
+    } catch (err: any) {
+      showToast(err?.response?.data?.detail || 'Failed to block domain.', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
@@ -543,15 +552,36 @@ export default function DeviceDetails() {
                         <Globe size={13} color="#00f0ff" />
                         {vd.domain}
                       </span>
-                      <a 
-                        href={`https://${vd.domain}`} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        style={{ color: '#94a3b8', transition: 'color 0.2s' }}
-                        title={`Open https://${vd.domain}`}
-                      >
-                        <ExternalLink size={13} />
-                      </a>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button
+                          onClick={() => handleQuickBlockDomain(vd.domain)}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            color: '#f87171',
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}
+                          title="Block this domain fleet-wide"
+                        >
+                          <ShieldAlert size={11} /> Block
+                        </button>
+                        <a 
+                          href={`https://${vd.domain}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          style={{ color: '#94a3b8', transition: 'color 0.2s' }}
+                          title={`Open https://${vd.domain}`}
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
                       <span>IP: <strong style={{ color: '#cbd5e1' }}>{vd.resolved_ip || '—'}</strong></span>

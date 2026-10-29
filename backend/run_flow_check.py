@@ -2,7 +2,7 @@ import asyncio
 import httpx
 
 async def test_flow():
-    async with httpx.AsyncClient(base_url="http://127.0.0.1:8001") as client:
+    async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Wait for server to start
         await asyncio.sleep(2)
         

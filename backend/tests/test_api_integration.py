@@ -68,10 +68,25 @@ async def test_full_system_api_flow():
         hb_res = await client.post("/api/v1/agent/heartbeat", headers=dev_headers, json=hb_data)
         assert hb_res.status_code == 200
 
-        # 6. Simulate cyber attack via Attack Simulator
-        sim_res = await client.post("/api/v1/anomalies/simulate?scenario=ssh_brute_force", headers=headers)
-        assert sim_res.status_code == 200
-        assert sim_res.json()["anomalies_detected"] >= 1
+        # 6. Ingest security event logs from agent (brute-force attack pattern)
+        now_str = datetime.now(timezone.utc).isoformat()
+        attack_logs = [
+            {
+                "timestamp": now_str,
+                "device_id": dev_id,
+                "os": "linux",
+                "source_type": "journald",
+                "source": "sshd",
+                "event_id": "sshd",
+                "event_type": "security",
+                "severity": "error",
+                "message": f"Failed password for invalid user root from 185.220.101.{40 + i} port 43210 ssh2",
+                "raw_log": f"sshd[{1200+i}]: Failed password for invalid user root from 185.220.101.{40 + i}"
+            }
+            for i in range(5)
+        ]
+        log_res = await client.post("/api/v1/agent/logs", headers=dev_headers, json={"device_id": dev_id, "logs": attack_logs})
+        assert log_res.status_code == 200
 
         # 7. Check AI Threat Center
         threats_res = await client.get("/api/v1/anomalies?status=active", headers=headers)
@@ -93,5 +108,14 @@ async def test_full_system_api_flow():
         assert history_res.status_code == 200
         assert "history" in history_res.json()
         assert len(history_res.json()["history"]) >= 1
+
+        # 9. Test Incident Response: Device Isolation & Restore
+        iso_res = await client.post(f"/api/v1/devices/{dev_id}/isolate", headers=headers)
+        assert iso_res.status_code == 200
+        assert iso_res.json()["status"] == "isolated"
+
+        restore_res = await client.post(f"/api/v1/devices/{dev_id}/restore", headers=headers)
+        assert restore_res.status_code == 200
+        assert restore_res.json()["status"] == "online"
 
     await Database.close_db()

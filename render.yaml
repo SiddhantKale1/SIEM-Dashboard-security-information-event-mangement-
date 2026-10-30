@@ -1,16 +1,16 @@
 services:
   - type: web
     name: siem-backend
-    runtime: python
+    runtime: go
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: go build -o siem-server ./cmd/server
+    startCommand: ./siem-server
     envVars:
-      - key: USE_MOCK_DB
-        value: "false"
-      - key: DATABASE_NAME
-        value: siem_mvp
-      - key: MONGODB_URI
-        sync: false
+      - key: PORT
+        value: "8000"
+      - key: DATABASE_DIR
+        value: "siem_data"
+      - key: JWT_SECRET
+        generateValue: true
       - key: CORS_ORIGIN_REGEX
         value: "^https?://.*$"

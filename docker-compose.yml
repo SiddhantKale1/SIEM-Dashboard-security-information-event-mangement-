@@ -1,31 +1,19 @@
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: siem_mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    restart: unless-stopped
-    networks:
-      - siem-network
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: siem_backend
+    container_name: sentinel_siem_backend
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017
-      - DATABASE_NAME=siem_mvp
-      - USE_MOCK_DB=false
-      - CORS_ORIGIN_REGEX=^https?://.*$
-    depends_on:
-      - mongodb
+      - PORT=8000
+      - DATABASE_DIR=/app/siem_data
+      - JWT_SECRET=sentinel-siem-prod-jwt-secret-key-change-me-32-chars
+    volumes:
+      - siem_data:/app/siem_data
     restart: unless-stopped
     networks:
       - siem-network
@@ -34,9 +22,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: siem_frontend
+    container_name: sentinel_siem_frontend
     ports:
       - "80:80"
+    environment:
+      - VITE_API_URL=/api/v1
     depends_on:
       - backend
     restart: unless-stopped
@@ -44,7 +34,7 @@ services:
       - siem-network
 
 volumes:
-  mongodb_data:
+  siem_data:
 
 networks:
   siem-network:

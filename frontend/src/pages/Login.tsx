@@ -7,7 +7,6 @@ import {
   EyeOff, 
   ArrowRight, 
   AlertCircle, 
-  HelpCircle,
   Activity,
   CheckCircle2,
   UserPlus,
@@ -45,7 +44,6 @@ export default function Login({ initialMode = 'login' }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [gatewayOnline, setGatewayOnline] = useState<boolean | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     if (location.pathname === '/register') {
@@ -278,10 +276,9 @@ export default function Login({ initialMode = 'login' }: LoginProps) {
 
             {/* Password */}
             <div>
-                <label className="block text-xs font-bold text-[#374151] mb-1.5">
-                  Password
-                </label>
-              </div>
+              <label className="block text-xs font-bold text-[#374151] mb-1.5">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-[#9ca3af] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input

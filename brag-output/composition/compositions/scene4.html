@@ -21,100 +21,162 @@
         width: 1920px;
         height: 1080px;
         background: #f4f5f7;
-        padding: 60px 80px;
+        padding: 44px 60px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        gap: 20px;
       }
-      .containment-card {
-        width: 1200px;
+      .header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         background: #ffffff;
-        border-radius: 32px;
-        border: 2px solid #82c341;
-        box-shadow: 0 25px 60px rgba(130, 195, 65, 0.25);
-        overflow: hidden;
-      }
-      .containment-top {
-        background: #82c341;
-        color: #142a00;
-        padding: 24px 36px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .containment-top h2 {
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .containment-body {
-        padding: 48px 54px;
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-      }
-      .isolation-status-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .status-title {
-        font-size: 36px;
-        font-weight: 900;
-        color: #0b0f19;
-      }
-      .status-badge-quarantined {
-        background: #82c341;
-        color: #142a00;
-        font-size: 18px;
-        font-weight: 900;
-        padding: 10px 24px;
-        border-radius: 9999px;
-        box-shadow: 0 4px 14px rgba(130, 195, 65, 0.4);
-      }
-      .security-stats-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-      }
-      .stat-highlight {
-        background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 20px;
-        padding: 24px;
-        text-align: center;
+        padding: 14px 28px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
       }
-      .stat-highlight h4 {
-        font-size: 14px;
-        color: #475569;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 8px;
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
-      .stat-highlight p {
-        font-size: 32px;
+      .page-pill {
+        background: #15803d;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 6px;
+        letter-spacing: 0.08em;
+      }
+      .brand-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0b0f19;
+        letter-spacing: -0.02em;
+      }
+      .status-pill {
+        font-size: 13px;
+        font-weight: 800;
+        padding: 4px 14px;
+        border-radius: 9999px;
+        letter-spacing: 0.05em;
+        transition: all 0.3s ease;
+      }
+      .status-online {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .status-isolated {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #ef4444;
+      }
+      .fleet-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1.8fr;
+        gap: 20px;
+        flex: 1;
+      }
+      .node-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .node-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .node-title {
+        font-size: 24px;
         font-weight: 900;
         color: #0b0f19;
       }
-      .stat-highlight .green-sub {
-        color: #27480a;
-        font-weight: 800;
-        font-size: 15px;
+      .node-meta {
+        font-size: 14px;
+        color: #64748b;
         margin-top: 4px;
       }
-      .res-banner {
+      .gauge-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin: 20px 0;
+      }
+      .gauge-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px;
+        text-align: center;
+      }
+      .gauge-val {
+        font-size: 26px;
+        font-weight: 900;
+        color: #0b0f19;
+      }
+      .gauge-lbl {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+      .action-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .quarantine-banner {
         background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        border-radius: 18px;
-        padding: 18px 28px;
+        border: 2px solid #82c341;
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        color: #142a00;
+      }
+      .qb-title {
+        font-size: 22px;
+        font-weight: 900;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 10px;
+      }
+      .qb-desc {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #166534;
+        font-weight: 600;
+      }
+      .btn-quarantine-big {
+        background: #dc2626;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 800;
+        padding: 16px 32px;
+        border-radius: 16px;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
       }
     </style>
   </head>
@@ -122,60 +184,78 @@
     <div
       id="scene-4"
       data-composition-id="scene4"
-      data-start="0"
-      data-duration="4.0"
+      data-start="13.5"
+      data-duration="5.5"
       data-width="1920"
       data-height="1080"
     >
-      <div class="containment-card" id="s4-modal">
-        <div class="containment-top" data-layout-ignore="true">
-          <h2>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#142a00" stroke-width="2.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              <path d="m9 12 2 2 4-4"></path>
-            </svg>
-            ONE-CLICK HOST ISOLATION ENGAGED
-          </h2>
-          <div style="font-weight: 800; font-size: 16px;">ZERO-TRUST MITIGATION</div>
+      <div class="header-bar">
+        <div class="header-left">
+          <span class="page-pill">SLIDE 3 OF 5</span>
+          <span class="brand-title">Fleet Management & 1-Click Zero-Trust Quarantine</span>
+        </div>
+        <div id="status-badge" class="status-pill status-online">
+          NODE STATUS: ONLINE
+        </div>
+      </div>
+
+      <div class="fleet-grid">
+        <!-- Node Detail Card -->
+        <div class="node-card" id="fleet-node-card">
+          <div>
+            <div class="node-header">
+              <div>
+                <div class="node-title">PRIMARY-SOC-SRV</div>
+                <div class="node-meta">Linux (Fedora 40) • IP: 192.168.10.88</div>
+              </div>
+              <span style="font-size:12px; font-weight:800; background:#f1f5f9; padding:6px 12px; border-radius:8px">Go Agent 2.0.0</span>
+            </div>
+
+            <div class="gauge-row">
+              <div class="gauge-box">
+                <div class="gauge-val">18.4%</div>
+                <div class="gauge-lbl">CPU USAGE</div>
+              </div>
+              <div class="gauge-box">
+                <div class="gauge-val">34.2%</div>
+                <div class="gauge-lbl">RAM USAGE</div>
+              </div>
+              <div class="gauge-box">
+                <div class="gauge-val">2.4 MB</div>
+                <div class="gauge-lbl">NET TX/SEC</div>
+              </div>
+            </div>
+
+            <div style="font-size:14px; color:#475569; line-height:1.5; margin-top:14px">
+              <strong>Telemetry Stream:</strong> Heartbeat every 10s • Native static agent • Subnet 192.168.10.0/24
+            </div>
+          </div>
+
+          <div style="font-size:13px; color:#64748b; font-weight:600">
+            Last seen: Just now • Enrollment Token: ENROLL-DRRD-Y6Y5
+          </div>
         </div>
 
-        <div class="containment-body">
-          <div class="isolation-status-row">
-            <div>
-              <div class="status-title">PRIMARY-SOC-SRV</div>
-              <div style="font-size: 16px; color: #475569; font-weight: 600; margin-top: 4px;" data-layout-ignore="true">Host isolated from subnet 192.168.1.0/24 • Management agent TLS retained</div>
-            </div>
-            <div class="status-badge-quarantined" id="s4-badge" data-layout-ignore="true">
-              STATUS: QUARANTINED
-            </div>
+        <!-- Containment Action Card -->
+        <div class="action-box" id="fleet-action-box">
+          <div>
+            <h3 style="font-size:22px; font-weight:900; color:#0b0f19; margin-bottom:8px">Instant Host Containment</h3>
+            <p style="font-size:15px; color:#64748b; line-height:1.5; margin-bottom:20px">
+              Engage immediate 1-click quarantine to sever active sockets and block adversary persistence.
+            </p>
+
+            <button class="btn-quarantine-big" id="btn-isolate-trigger">
+              <span>🔒 1-CLICK ISOLATE HOST</span>
+            </button>
           </div>
 
-          <div class="security-stats-row" data-layout-ignore="true">
-            <div class="stat-highlight">
-              <h4>Network Ingress/Egress</h4>
-              <p style="color: #b91c1c;">0 Sockets</p>
-              <div class="green-sub">All lateral ports blocked</div>
+          <div class="quarantine-banner" id="quarantine-result" style="opacity:0">
+            <div class="qb-title">
+              <span>🛡️</span>
+              <span>ZERO-TRUST BOUNDARY ENFORCED</span>
             </div>
-
-            <div class="stat-highlight">
-              <h4>Threat Status</h4>
-              <p style="color: #27480a;">Contained</p>
-              <div class="green-sub">Zero data egress observed</div>
-            </div>
-
-            <div class="stat-highlight">
-              <h4>Fleet Posture</h4>
-              <p style="color: #0b0f19;">99.4 / 100</p>
-              <div class="green-sub">Fleet integrity restored</div>
-            </div>
-          </div>
-
-          <div class="res-banner" data-layout-ignore="true">
-            <div style="font-weight: 800; color: #14532d; font-size: 16px;">
-              ✔ iptables DROP rules active • MITRE ATT&CK T1110 Mitigated
-            </div>
-            <div style="font-weight: 700; color: #15803d; font-size: 14px;">
-              Response time: 42 ms
+            <div class="qb-desc">
+              All agent telemetry severed with <strong>HTTP 403 Forbidden</strong>. Remote interactive sockets dropped. Node quarantined with zero breach expansion.
             </div>
           </div>
         </div>
@@ -184,10 +264,20 @@
 
     <script>
       const tl = gsap.timeline({ paused: true });
+      tl.from("#scene-4", { opacity: 0, duration: 0.3, ease: "power2.out" }, 0);
+      tl.from("#fleet-node-card", { x: -20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.1);
+      tl.from("#fleet-action-box", { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.2);
 
-      tl.fromTo("#s4-modal", { opacity: 0, scale: 0.92, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "power4.out" }, 0.1);
-      tl.fromTo("#s4-badge", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, 0.6);
-      tl.to("#scene-4", { opacity: 0, duration: 0.35, ease: "power2.in" }, 3.65);
+      // Simulate 1-click quarantine trigger at 2.0s
+      tl.to("#btn-isolate-trigger", { scale: 0.94, duration: 0.15, yoyo: true, repeat: 1 }, 1.8);
+      tl.call(() => {
+        const badge = document.getElementById("status-badge");
+        badge.className = "status-pill status-isolated";
+        badge.innerText = "NODE STATUS: ISOLATED & QUARANTINED";
+      }, null, 2.0);
+      tl.to("#quarantine-result", { opacity: 1, y: -5, duration: 0.4, ease: "power2.out" }, 2.1);
+
+      tl.to("#scene-4", { opacity: 0, scale: 0.98, duration: 0.35, ease: "power2.in" }, 5.15);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["scene4"] = tl;

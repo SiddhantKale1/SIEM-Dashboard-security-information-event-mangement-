@@ -15,64 +15,174 @@
         width: 1920px;
         height: 1080px;
         overflow: hidden;
-        background: #0b0f19;
+        background: #f4f5f7;
       }
       #scene-5 {
         width: 1920px;
         height: 1080px;
-        background: #0b0f19;
+        background: #f4f5f7;
+        padding: 44px 60px;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        text-align: center;
+        gap: 20px;
       }
-      .outro-shield {
-        width: 130px;
-        height: 130px;
-        margin-bottom: 28px;
-      }
-      .outro-title {
-        font-size: 90px;
-        font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 1;
-        margin-bottom: 20px;
-        color: #ffffff;
-      }
-      .outro-title span {
-        color: #82c341;
-      }
-      .outro-punchline {
-        font-size: 34px;
-        font-weight: 700;
-        color: #cbd5e1;
-        margin-bottom: 40px;
-      }
-      .features-pill-row {
+      .header-bar {
         display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 14px 28px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
         gap: 16px;
-        margin-bottom: 44px;
       }
-      .feature-tag {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: #f1f5f9;
-        padding: 10px 22px;
+      .page-pill {
+        background: #4f46e5;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 6px;
+        letter-spacing: 0.08em;
+      }
+      .brand-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0b0f19;
+        letter-spacing: -0.02em;
+      }
+      .controls-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 12px 24px;
+      }
+      .search-mock {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f1f5f9;
+        padding: 8px 18px;
+        border-radius: 10px;
+        color: #64748b;
+        font-size: 14px;
+        width: 450px;
+      }
+      .filter-pills {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .f-pill {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+      }
+      .f-pill.active {
+        background: #111827;
+        color: #ffffff;
+      }
+      .humanizer-hero {
+        background: #ffffff;
+        border: 2px solid #82c341;
+        border-radius: 24px;
+        padding: 32px 40px;
+        box-shadow: 0 10px 30px rgba(130, 195, 65, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .hh-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .hh-tag {
+        background: #f0fdf4;
+        border: 1px solid #82c341;
+        color: #166534;
+        font-size: 13px;
+        font-weight: 800;
+        padding: 4px 14px;
         border-radius: 9999px;
-        font-size: 16px;
-        font-weight: 700;
       }
-      .outro-repo {
-        font-size: 20px;
-        font-weight: 700;
-        color: #82c341;
-        letter-spacing: 0.05em;
-        padding: 12px 28px;
-        background: rgba(130, 195, 65, 0.1);
-        border-radius: 14px;
-        border: 1px solid rgba(130, 195, 65, 0.3);
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .comp-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .comp-title {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        color: #64748b;
+      }
+      .raw-code {
+        font-family: monospace;
+        font-size: 13px;
+        color: #b91c1c;
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 12px;
+        line-height: 1.4;
+      }
+      .translated-text {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0b0f19;
+        line-height: 1.4;
+        background: #ffffff;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      .log-table-mock {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 16px 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .table-row {
+        display: grid;
+        grid-template-columns: 140px 180px 180px 1fr 120px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        background: #f8fafc;
+      }
+      .row-header {
+        font-weight: 800;
+        color: #64748b;
+        background: transparent;
       }
     </style>
   </head>
@@ -80,38 +190,88 @@
     <div
       id="scene-5"
       data-composition-id="scene5"
-      data-start="0"
-      data-duration="2.5"
+      data-start="19.0"
+      data-duration="5.5"
       data-width="1920"
       data-height="1080"
     >
-      <svg class="outro-shield" id="s5-shield" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2.5">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        <path d="m9 12 2 2 4-4"></path>
-      </svg>
-      <h1 class="outro-title" id="s5-title">SENTINEL <span>SIEM</span></h1>
-      <div class="outro-punchline" id="s5-punch">Your SOC, autonomous in milliseconds.</div>
-
-      <div class="features-pill-row" id="s5-pills" data-layout-ignore="true">
-        <div class="feature-tag">Real-Time Ingestion</div>
-        <div class="feature-tag">MITRE ATT&CK Engine</div>
-        <div class="feature-tag">One-Click Isolation</div>
-        <div class="feature-tag">Lightweight Agents</div>
+      <div class="header-bar">
+        <div class="header-left">
+          <span class="page-pill">SLIDE 4 OF 5</span>
+          <span class="brand-title">Centralized Security Logs & AI Humanizer</span>
+        </div>
+        <div style="font-size:14px; color:#475569; font-weight:700">
+          5,000 Ingested Logs • Auto-Prune Active • Sub-Millisecond Search
+        </div>
       </div>
 
-      <div class="outro-repo" id="s5-repo" data-layout-ignore="true">
-        github.com/SiddhantKale1/SIEM-Dashboard
+      <div class="controls-bar">
+        <div class="search-mock">
+          <span>🔍</span>
+          <span>Search hosts, categories, or humanized summaries...</span>
+        </div>
+        <div class="filter-pills">
+          <span class="f-pill active">All Logs</span>
+          <span class="f-pill" style="color:#dc2626">Critical Only</span>
+          <span class="f-pill" style="color:#d97706">Warnings</span>
+          <span class="f-pill" style="background:#fee2e2; border-color:#fca5a5; color:#991b1b">⚠️ Prohibited Policy Violations</span>
+        </div>
+      </div>
+
+      <!-- Humanizer Feature Showcase -->
+      <div class="humanizer-hero" id="humanizer-card">
+        <div class="hh-header">
+          <span class="hh-tag">⚡ AI LOG HUMANIZER ENGINE</span>
+          <span style="font-size:13px; color:#64748b; font-weight:600">Translating low-level system logs into actionable intelligence</span>
+        </div>
+
+        <div class="comparison-grid">
+          <div class="comp-box">
+            <div class="comp-title">RAW CRYPTIC SYSLOG TELEMETRY</div>
+            <div class="raw-code">
+              type=EXECVE a0="sudo" a1="chmod" a2="777" a3="/etc/shadow" pid=4812 uid=1001 euid=0
+            </div>
+          </div>
+          <div class="comp-box" style="border-color:#bbf7d0; background:#f0fdf4">
+            <div class="comp-title" style="color:#166534">AI PLAIN-ENGLISH TRANSLATION</div>
+            <div class="translated-text">
+              "Administrative privilege invocation (root/sudo) detected modifying protected security tables."
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Stream Preview -->
+      <div class="log-table-mock">
+        <div class="table-row row-header">
+          <span>SEVERITY</span>
+          <span>CATEGORY</span>
+          <span>HOST</span>
+          <span>HUMANIZED SUMMARY</span>
+          <span>TIME</span>
+        </div>
+        <div class="table-row">
+          <span style="color:#991b1b; font-weight:800; background:#fee2e2; padding:3px 8px; border-radius:4px">CRITICAL</span>
+          <span style="font-weight:700">Admin Privilege</span>
+          <span style="font-family:monospace">PRIMARY-SOC-SRV</span>
+          <span>Administrative privilege invocation (root/sudo) on sensitive tables</span>
+          <span style="color:#64748b">16:23:44</span>
+        </div>
+        <div class="table-row">
+          <span style="color:#9a3412; font-weight:800; background:#ffedd5; padding:3px 8px; border-radius:4px">WARNING</span>
+          <span style="font-weight:700">Failed Login</span>
+          <span style="font-family:monospace">FINANCE-WKS-02</span>
+          <span>Failed authentication: Incorrect credentials supplied for 'guest'</span>
+          <span style="color:#64748b">16:23:39</span>
+        </div>
       </div>
     </div>
 
     <script>
       const tl = gsap.timeline({ paused: true });
-
-      tl.fromTo("#s5-shield", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.5)" }, 0.05);
-      tl.fromTo("#s5-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.15);
-      tl.fromTo("#s5-punch", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.25);
-      tl.fromTo("#s5-pills", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.35);
-      tl.fromTo("#s5-repo", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.4)" }, 0.45);
+      tl.from("#scene-5", { opacity: 0, duration: 0.3, ease: "power2.out" }, 0);
+      tl.from("#humanizer-card", { y: 20, opacity: 0, duration: 0.45, ease: "back.out(1.1)" }, 0.1);
+      tl.to("#scene-5", { opacity: 0, scale: 0.98, duration: 0.35, ease: "power2.in" }, 5.15);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["scene5"] = tl;

@@ -21,114 +21,168 @@
         width: 1920px;
         height: 1080px;
         background: #f4f5f7;
-        padding: 60px 80px;
+        padding: 44px 60px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        gap: 20px;
       }
-      .alert-modal {
-        width: 1200px;
+      .header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         background: #ffffff;
-        border-radius: 32px;
-        border: 2px solid #ef4444;
-        box-shadow: 0 25px 60px rgba(239, 68, 68, 0.2);
-        overflow: hidden;
-      }
-      .alert-top {
-        background: #dc2626;
-        color: #ffffff;
-        padding: 24px 36px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .alert-badge {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-      }
-      .alert-body {
-        padding: 44px 50px;
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-      }
-      .threat-main {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-      .threat-name {
-        font-size: 38px;
-        font-weight: 900;
-        color: #0b0f19;
-        letter-spacing: -0.02em;
-        margin-bottom: 8px;
-      }
-      .threat-mitre {
-        display: inline-block;
-        background: #fee2e2;
-        color: #991b1b;
-        font-weight: 800;
-        font-size: 15px;
-        padding: 6px 14px;
-        border-radius: 8px;
-      }
-      .severity-pill {
-        background: #dc2626;
-        color: #ffffff;
-        padding: 10px 20px;
-        border-radius: 12px;
-        font-size: 18px;
-        font-weight: 900;
-      }
-      .threat-details-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-        background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 20px;
-        padding: 24px 30px;
+        padding: 14px 28px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
       }
-      .detail-box label {
-        display: block;
-        font-size: 13px;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #475569;
-        margin-bottom: 6px;
-        letter-spacing: 0.05em;
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
-      .detail-box span {
+      .page-pill {
+        background: #dc2626;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 6px;
+        letter-spacing: 0.08em;
+      }
+      .brand-title {
         font-size: 22px;
         font-weight: 800;
         color: #0b0f19;
+        letter-spacing: -0.02em;
       }
-      .action-banner {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #fff1f2;
-        border: 1px solid #fecdd3;
-        border-radius: 18px;
-        padding: 20px 28px;
-      }
-      #btn-isolate {
-        background: #0b0f19;
-        color: #ffffff;
-        padding: 14px 28px;
-        border-radius: 14px;
+      .threat-badge {
+        background: #fee2e2;
+        color: #991b1b;
+        font-size: 12px;
         font-weight: 800;
-        font-size: 16px;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        letter-spacing: 0.05em;
+      }
+      .incident-card {
+        background: #ffffff;
+        border: 2px solid #ef4444;
+        border-radius: 28px;
+        padding: 36px 44px;
+        box-shadow: 0 20px 50px rgba(239, 68, 68, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        flex: 1;
+      }
+      .incident-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .tags-group {
         display: flex;
         align-items: center;
         gap: 10px;
+      }
+      .tag-crit {
+        background: #fee2e2;
+        color: #991b1b;
+        font-size: 11px;
+        font-weight: 900;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        text-transform: uppercase;
+      }
+      .tag-mitre {
+        background: #f1f5f9;
+        color: #1e293b;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 9999px;
+      }
+      .tag-conf {
+        background: #f0fdf4;
+        color: #166534;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 9999px;
+      }
+      .host-banner {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .host-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #0b0f19;
+      }
+      .incident-title {
+        font-size: 32px;
+        font-weight: 900;
+        color: #0b0f19;
+        letter-spacing: -0.02em;
+      }
+      .incident-summary {
+        font-size: 16px;
+        color: #475569;
+        line-height: 1.5;
+      }
+      .evidence-box {
+        background: #fef2f2;
+        border-left: 4px solid #ef4444;
+        border-radius: 0 12px 12px 0;
+        padding: 16px 20px;
+        font-size: 14px;
+        color: #7f1d1d;
+        line-height: 1.5;
+        font-weight: 600;
+      }
+      .actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 14px;
+        margin-top: auto;
+      }
+      .btn-outline {
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0b0f19;
+      }
+      .btn-isolate {
+        padding: 10px 24px;
+        border-radius: 12px;
+        border: 1px solid #fecaca;
+        background: #fee2e2;
+        font-size: 14px;
+        font-weight: 800;
+        color: #991b1b;
+      }
+      .btn-resolve {
+        padding: 10px 24px;
+        border-radius: 12px;
+        background: #111827;
+        font-size: 14px;
+        font-weight: 800;
+        color: #ffffff;
       }
     </style>
   </head>
@@ -136,72 +190,65 @@
     <div
       id="scene-3"
       data-composition-id="scene3"
-      data-start="0"
+      data-start="8.5"
       data-duration="5.0"
       data-width="1920"
       data-height="1080"
     >
-      <div class="alert-modal" id="s3-modal">
-        <div class="alert-top" data-layout-ignore="true">
-          <div class="alert-badge">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            CRITICAL INCIDENT DETECTED
+      <div class="header-bar">
+        <div class="header-left">
+          <span class="page-pill">SLIDE 2 OF 5</span>
+          <span class="brand-title">AI Threat Center & MITRE ATT&CK Radar</span>
+          <span class="threat-badge">1 ACTIVE INCIDENT DETECTED</span>
+        </div>
+        <div style="font-size:14px; color:#475569; font-weight:700">
+          Autonomous Multi-Signal Classifier Active
+        </div>
+      </div>
+
+      <div class="incident-card" id="inc-card">
+        <div class="incident-meta-row">
+          <div class="tags-group">
+            <span class="tag-crit">CRITICAL SEVERITY</span>
+            <span class="tag-mitre">MITRE T1110: Brute Force</span>
+            <span class="tag-conf">96% AI CONFIDENCE</span>
           </div>
-          <div style="font-weight: 700; font-size: 16px;">EVENT ID: SEC-7890-B8A4</div>
+          <div style="font-size:13px; color:#64748b; font-weight:600">Detected: 14 seconds ago</div>
         </div>
 
-        <div class="alert-body">
-          <div class="threat-main">
-            <div>
-              <div class="threat-name">Distributed SSH Brute-Force Attack</div>
-              <div class="threat-mitre" data-layout-ignore="true">MITRE ATT&CK T1110 • CREDENTIAL ACCESS</div>
-            </div>
-            <div class="severity-pill" data-layout-ignore="true">SEVERITY 9.4 / 10</div>
+        <div class="host-banner">
+          <div class="host-info">
+            <span style="font-size:20px">🐧</span>
+            <span>Target Host: <strong style="color:#166534">PRIMARY-SOC-SRV</strong> (192.168.10.88)</span>
           </div>
+          <span style="font-size:12px; font-family:monospace; background:#ffffff; padding:4px 8px; border-radius:6px; border:1px solid #e2e8f0">ID: dev-primary-01</span>
+        </div>
 
-          <div class="threat-details-grid" data-layout-ignore="true">
-            <div class="detail-box">
-              <label>Compromised Endpoint</label>
-              <span>PRIMARY-SOC-SRV</span>
-            </div>
-            <div class="detail-box">
-              <label>Target Internal IP</label>
-              <span style="color: #b91c1c;">192.168.1.105</span>
-            </div>
-            <div class="detail-box">
-              <label>Failed Auth Bursts</label>
-              <span style="color: #b91c1c;">6,400 attempts / min</span>
-            </div>
-          </div>
+        <h2 class="incident-title">
+          Authentication Brute-Force Spray Detected (4 failed logons in 90s)
+        </h2>
 
-          <div class="action-banner">
-            <div>
-              <div style="font-weight: 800; color: #881337; font-size: 22px;">Automated Security Policy Triggered</div>
-              <div style="font-weight: 600; color: #9f1239; font-size: 16px; margin-top: 2px;" data-layout-ignore="true">Host isolation recommended to prevent lateral subnet movement.</div>
-            </div>
-            <div id="btn-isolate" data-layout-ignore="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2.5">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              ISOLATE HOST NOW
-            </div>
-          </div>
+        <p class="incident-summary">
+          Automated credential brute-force surge detected on <strong>PRIMARY-SOC-SRV</strong>. Multiple consecutive failed logon attempts originated from external adversary node <strong>185.220.101.55</strong> targeting SSH authentication tables.
+        </p>
+
+        <div class="evidence-box">
+          <strong>ROOT CAUSE FORENSICS:</strong> High-frequency failed logon burst matches dictionary spray attack pattern. 4 authentication failures observed within sliding 90s window. Target service: sshd.
+        </div>
+
+        <div class="actions-row">
+          <button class="btn-outline">Inspect Node Telemetry</button>
+          <button class="btn-isolate">🔒 1-Click Isolate Device</button>
+          <button class="btn-resolve">✓ Mark Remediated</button>
         </div>
       </div>
     </div>
 
     <script>
       const tl = gsap.timeline({ paused: true });
-
-      tl.fromTo("#s3-modal", { opacity: 0, scale: 0.88, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power4.out" }, 0.1);
-      tl.fromTo("#btn-isolate", { scale: 0.95 }, { scale: 1.05, duration: 0.3, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.5);
-      tl.to("#btn-isolate", { backgroundColor: "#dc2626", duration: 0.2 }, 4.3);
-      tl.to("#scene-3", { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.7);
+      tl.from("#scene-3", { opacity: 0, duration: 0.3, ease: "power2.out" }, 0);
+      tl.from("#inc-card", { scale: 0.96, y: 30, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.1);
+      tl.to("#scene-3", { opacity: 0, scale: 0.98, duration: 0.35, ease: "power2.in" }, 4.65);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["scene3"] = tl;

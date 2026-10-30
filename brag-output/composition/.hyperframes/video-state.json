@@ -1,7 +1,7 @@
 {
   "version": 1,
   "historyId": "6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9",
-  "currentRevision": "926996f2-b72b-4f71-9e19-1c521c42c67c",
+  "currentRevision": "ca675567-ca22-4632-93ef-649c1f70a83c",
   "pendingChanges": false,
   "files": {
     "AGENTS.md": {
@@ -293,8 +293,8 @@
       "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
     },
     "index.html": {
-      "hash": "11b26893a82aa35c7a42ea693c3d977abba62dfef64cbc9f53b9a1f152c2691a",
-      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/11/11b26893a82aa35c7a42ea693c3d977abba62dfef64cbc9f53b9a1f152c2691a"
+      "hash": "766cd2c5bf4edf175dc78086fcdeefc1a04c8403b54ead8508c6bc1155badc64",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/76/766cd2c5bf4edf175dc78086fcdeefc1a04c8403b54ead8508c6bc1155badc64"
     },
     "meta.json": {
       "hash": "73e27bbf0ab85e60a88e0807566cdc9051158b54b67b906937d64c4e12b17317",
@@ -309,24 +309,28 @@
       "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/aa/aa56ab1cdcbef6b05566c6a7c114323078580ccf6a740a9e6c6b6c4b40b4389f"
     },
     "compositions/scene1.html": {
-      "hash": "ea8c4351da7cd9f3ddef734fc2adec7b5488764803ae0691394caba4bedaea91",
-      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/ea/ea8c4351da7cd9f3ddef734fc2adec7b5488764803ae0691394caba4bedaea91"
+      "hash": "e1f12e0cce3891ebbf3d12f5ace75da365bcd6d8f3385c97e715e4ee222d8b4c",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/e1/e1f12e0cce3891ebbf3d12f5ace75da365bcd6d8f3385c97e715e4ee222d8b4c"
     },
     "compositions/scene2.html": {
-      "hash": "6b125dd4d1b473cce02f93373eff799260ef00fb17edd799280e96af5474a437",
-      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/6b/6b125dd4d1b473cce02f93373eff799260ef00fb17edd799280e96af5474a437"
+      "hash": "428aa55de86cb35efdac5c844841f26c8045bdd964156e1c1b10f080ee145319",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/42/428aa55de86cb35efdac5c844841f26c8045bdd964156e1c1b10f080ee145319"
     },
     "compositions/scene3.html": {
-      "hash": "7f4e57519bac82c0188c6c53065e88c09cbdfa363f1eff18c6218da4f6136fbc",
-      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/7f/7f4e57519bac82c0188c6c53065e88c09cbdfa363f1eff18c6218da4f6136fbc"
+      "hash": "333d8958ad861ce12331c630b3b82f16d30a9b0f895851d63b60d8ff4b070649",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/33/333d8958ad861ce12331c630b3b82f16d30a9b0f895851d63b60d8ff4b070649"
     },
     "compositions/scene4.html": {
-      "hash": "37338bf5051f49717a892e2467f7d76628825ca40123bc365de6b9dff40aa0c9",
-      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/37/37338bf5051f49717a892e2467f7d76628825ca40123bc365de6b9dff40aa0c9"
+      "hash": "bd071f3400c232883d13985185472394a136b198181630cd12d0e61c757aee0f",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/bd/bd071f3400c232883d13985185472394a136b198181630cd12d0e61c757aee0f"
     },
     "compositions/scene5.html": {
-      "hash": "fa2fc1198f4fdbe8e29f7015b24d4f75839d70a3ceff8dee8dfc3cb3c0cb758c",
-      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/fa/fa2fc1198f4fdbe8e29f7015b24d4f75839d70a3ceff8dee8dfc3cb3c0cb758c"
+      "hash": "d1b25f42cc0e8802b6f74e837906291eef447b41f63d0fe53606fdf2abc0d176",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/d1/d1b25f42cc0e8802b6f74e837906291eef447b41f63d0fe53606fdf2abc0d176"
+    },
+    "compositions/scene6.html": {
+      "hash": "986da8608f4239ff1c287ae8d22449252aff3de89799ec0b682145197dfce98d",
+      "content": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/98/986da8608f4239ff1c287ae8d22449252aff3de89799ec0b682145197dfce98d"
     }
   },
   "revisions": {
@@ -429,12 +433,51 @@
           "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/11/11b26893a82aa35c7a42ea693c3d977abba62dfef64cbc9f53b9a1f152c2691a"
         }
       }
+    },
+    "ca675567-ca22-4632-93ef-649c1f70a83c": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1793378571443,
+      "endedAt": 1793378571465,
+      "files": {
+        "compositions/scene1.html": {
+          "before": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/ea/ea8c4351da7cd9f3ddef734fc2adec7b5488764803ae0691394caba4bedaea91",
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/e1/e1f12e0cce3891ebbf3d12f5ace75da365bcd6d8f3385c97e715e4ee222d8b4c"
+        },
+        "compositions/scene2.html": {
+          "before": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/6b/6b125dd4d1b473cce02f93373eff799260ef00fb17edd799280e96af5474a437",
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/42/428aa55de86cb35efdac5c844841f26c8045bdd964156e1c1b10f080ee145319"
+        },
+        "compositions/scene3.html": {
+          "before": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/7f/7f4e57519bac82c0188c6c53065e88c09cbdfa363f1eff18c6218da4f6136fbc",
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/33/333d8958ad861ce12331c630b3b82f16d30a9b0f895851d63b60d8ff4b070649"
+        },
+        "compositions/scene4.html": {
+          "before": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/37/37338bf5051f49717a892e2467f7d76628825ca40123bc365de6b9dff40aa0c9",
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/bd/bd071f3400c232883d13985185472394a136b198181630cd12d0e61c757aee0f"
+        },
+        "compositions/scene5.html": {
+          "before": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/fa/fa2fc1198f4fdbe8e29f7015b24d4f75839d70a3ceff8dee8dfc3cb3c0cb758c",
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/d1/d1b25f42cc0e8802b6f74e837906291eef447b41f63d0fe53606fdf2abc0d176"
+        },
+        "compositions/scene6.html": {
+          "before": null,
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/98/986da8608f4239ff1c287ae8d22449252aff3de89799ec0b682145197dfce98d"
+        },
+        "index.html": {
+          "before": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/11/11b26893a82aa35c7a42ea693c3d977abba62dfef64cbc9f53b9a1f152c2691a",
+          "after": "/home/sidd/.cache/hyperframes/history/6b1cbe64-c1e0-4e41-8b3d-0c8f3a4035a9/blobs/76/766cd2c5bf4edf175dc78086fcdeefc1a04c8403b54ead8508c6bc1155badc64"
+        }
+      }
     }
   },
   "checks": {
     "latest": {
-      "revision": "926996f2-b72b-4f71-9e19-1c521c42c67c",
-      "id": "ea89b4ed-9c07-4897-bb5b-506449742598"
+      "revision": "ca675567-ca22-4632-93ef-649c1f70a83c",
+      "id": "39edc026-c920-42d2-99f6-603c75a4bb0b"
     },
     "revisions": {
       "298c5ea9-2bb4-4640-bc22-ab464085d478": [
@@ -552,6 +595,62 @@
           "contentHash": "9845985d1a33a396bdb78096d8ff0b84e050da7afc504ba0de0762b1f232a360",
           "revision": "926996f2-b72b-4f71-9e19-1c521c42c67c",
           "inputFingerprint": "f1c772dad9268b0bd4fd1e95211e2f3f4c6844c9101473ade38815d9cc3a2728",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ],
+      "ca675567-ca22-4632-93ef-649c1f70a83c": [
+        {
+          "id": "600b5740-9b5e-4e35-8161-07bc891dd22d",
+          "scope": "project",
+          "report": "/home/sidd/SIEM-Dashboard-security-information-event-mangement-/brag-output/composition/.hyperframes/artifacts/checks/600b5740-9b5e-4e35-8161-07bc891dd22d.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 10000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1793378584940,
+          "contentHash": "783841637f8f35f9f0e028b8b333686c8abdc838a3903556258f37a1f6fd2107",
+          "revision": "ca675567-ca22-4632-93ef-649c1f70a83c",
+          "inputFingerprint": "9dc3d93a2cad4c09c32269568892e41b434258d296dac922ee1c5c216eddda94",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "id": "39edc026-c920-42d2-99f6-603c75a4bb0b",
+          "scope": "project",
+          "report": "/home/sidd/SIEM-Dashboard-security-information-event-mangement-/brag-output/composition/.hyperframes/artifacts/checks/39edc026-c920-42d2-99f6-603c75a4bb0b.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 10000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1793378640686,
+          "contentHash": "783841637f8f35f9f0e028b8b333686c8abdc838a3903556258f37a1f6fd2107",
+          "revision": "ca675567-ca22-4632-93ef-649c1f70a83c",
+          "inputFingerprint": "9dc3d93a2cad4c09c32269568892e41b434258d296dac922ee1c5c216eddda94",
           "inputScope": "local-project-files",
           "attribution": "recorded-revision"
         }
@@ -720,13 +819,14 @@
   },
   "renders": {
     "latest": {
-      "id": "00603053-50bc-4359-9b6e-c5455913836a",
-      "completedAt": 1793298258275,
+      "id": "74bd0af7-b652-4b8b-9dc8-f3e48a64bdd6",
+      "completedAt": 1793378789113,
       "output": "/home/sidd/SIEM-Dashboard-security-information-event-mangement-/brag-output/brag.webm",
       "status": "completed",
-      "revision": "926996f2-b72b-4f71-9e19-1c521c42c67c"
+      "revision": "ca675567-ca22-4632-93ef-649c1f70a83c"
     },
     "retainedRevisions": [
+      "ca675567-ca22-4632-93ef-649c1f70a83c",
       "926996f2-b72b-4f71-9e19-1c521c42c67c"
     ]
   },

@@ -36,18 +36,21 @@
       id="root"
       data-composition-id="main"
       data-start="0"
-      data-duration="20"
+      data-duration="30"
       data-width="1920"
       data-height="1080"
     >
+      <!-- Background Audio Track -->
       <audio
         id="bg-music"
         src="assets/music/happy-beats-business-moves-vol-1-by-ende-dot-app.mp3"
         data-start="0"
-        data-duration="20"
+        data-duration="30"
         data-volume="0.60"
-        data-fade-out="1.5"
+        data-fade-out="2.0"
       ></audio>
+
+      <!-- Key SFX Cues -->
       <audio
         id="sfx-key-1"
         src="assets/sfx/keyboard/keypress-001.wav"
@@ -72,32 +75,54 @@
       <audio
         id="sfx-bong-1"
         src="assets/sfx/interface/bong_001.ogg"
-        data-start="8.6"
-        data-duration="0.15"
+        data-start="8.7"
+        data-duration="0.2"
         data-volume="0.8"
       ></audio>
       <audio
         id="sfx-click-2"
         src="assets/sfx/interface/click_004.ogg"
-        data-start="13.7"
-        data-duration="0.05"
+        data-start="13.6"
+        data-duration="0.1"
         data-volume="0.7"
       ></audio>
       <audio
         id="sfx-switch-2"
         src="assets/sfx/interface/switch_001.ogg"
-        data-start="14.1"
+        data-start="15.5"
         data-duration="0.4"
         data-volume="0.7"
       ></audio>
       <audio
         id="sfx-click-3"
         src="assets/sfx/ui/click1.ogg"
-        data-start="17.6"
+        data-start="19.1"
         data-duration="0.12"
         data-volume="0.5"
       ></audio>
+      <audio
+        id="sfx-switch-3"
+        src="assets/sfx/interface/switch_001.ogg"
+        data-start="21.0"
+        data-duration="0.4"
+        data-volume="0.6"
+      ></audio>
+      <audio
+        id="sfx-click-4"
+        src="assets/sfx/ui/click1.ogg"
+        data-start="24.6"
+        data-duration="0.12"
+        data-volume="0.5"
+      ></audio>
+      <audio
+        id="sfx-bell-1"
+        src="assets/sfx/interface/bong_001.ogg"
+        data-start="27.5"
+        data-duration="0.3"
+        data-volume="0.6"
+      ></audio>
 
+      <!-- Scene 1: Command Center Hook & Go Core (0.0s - 3.5s) -->
       <div
         id="scene-1-host"
         class="clip scene-host"
@@ -107,6 +132,7 @@
         data-duration="3.5"
       ></div>
 
+      <!-- Scene 2: Page 1 — Real-Time Telemetry & EPS Dashboard (3.5s - 8.5s) -->
       <div
         id="scene-2-host"
         class="clip scene-host"
@@ -116,6 +142,7 @@
         data-duration="5.0"
       ></div>
 
+      <!-- Scene 3: Page 2 — AI Threat Center & MITRE ATT&CK Radar (8.5s - 13.5s) -->
       <div
         id="scene-3-host"
         class="clip scene-host"
@@ -125,22 +152,34 @@
         data-duration="5.0"
       ></div>
 
+      <!-- Scene 4: Page 3 — Endpoint Fleet & Zero-Trust Quarantine (13.5s - 19.0s) -->
       <div
         id="scene-4-host"
         class="clip scene-host"
         data-composition-id="scene4"
         data-composition-src="compositions/scene4.html"
         data-start="13.5"
-        data-duration="4.0"
+        data-duration="5.5"
       ></div>
 
+      <!-- Scene 5: Page 4 — Centralized Logs & AI Log Humanizer (19.0s - 24.5s) -->
       <div
         id="scene-5-host"
         class="clip scene-host"
         data-composition-id="scene5"
         data-composition-src="compositions/scene5.html"
-        data-start="17.5"
-        data-duration="2.5"
+        data-start="19.0"
+        data-duration="5.5"
+      ></div>
+
+      <!-- Scene 6: Page 5 — Network Topology & Outro Punchline (24.5s - 30.0s) -->
+      <div
+        id="scene-6-host"
+        class="clip scene-host"
+        data-composition-id="scene6"
+        data-composition-src="compositions/scene6.html"
+        data-start="24.5"
+        data-duration="5.5"
       ></div>
     </div>
     <script>

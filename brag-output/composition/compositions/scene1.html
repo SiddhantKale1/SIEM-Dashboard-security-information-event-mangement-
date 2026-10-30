@@ -29,24 +29,24 @@
         text-align: center;
       }
       .shield-icon {
-        width: 120px;
-        height: 120px;
-        margin-bottom: 24px;
+        width: 110px;
+        height: 110px;
+        margin-bottom: 20px;
       }
       .scene1-badge {
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        padding: 8px 20px;
+        padding: 8px 22px;
         border-radius: 9999px;
         background: rgba(130, 195, 65, 0.12);
         border: 1px solid rgba(130, 195, 65, 0.4);
         color: #82c341;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        margin-bottom: 24px;
+        margin-bottom: 22px;
       }
       .pulse-dot {
         width: 10px;
@@ -55,22 +55,36 @@
         border-radius: 50%;
       }
       .scene1-title {
-        font-size: 88px;
+        font-size: 86px;
         font-weight: 900;
         letter-spacing: -0.04em;
         line-height: 1.05;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
         color: #ffffff;
       }
       .scene1-title span {
         color: #82c341;
       }
       .scene1-sub {
-        font-size: 30px;
+        font-size: 28px;
         color: #cbd5e1;
         font-weight: 600;
-        max-width: 900px;
+        max-width: 960px;
         line-height: 1.4;
+        margin-bottom: 24px;
+      }
+      .go-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 18px;
+        border-radius: 12px;
+        background: rgba(0, 173, 216, 0.15);
+        border: 1px solid rgba(0, 173, 216, 0.4);
+        color: #00add8;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
       }
     </style>
   </head>
@@ -85,7 +99,7 @@
     >
       <div class="scene1-badge" id="s1-badge" data-layout-ignore="true">
         <div class="pulse-dot"></div>
-        Centralized Telemetry Operations
+        High-Performance SIEM Telemetry Operations
       </div>
       <svg class="shield-icon" id="s1-shield" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -93,17 +107,20 @@
       </svg>
       <h1 class="scene1-title" id="s1-title">SENTINEL <span>SIEM</span></h1>
       <p class="scene1-sub" id="s1-sub">
-        Real-time telemetry, MITRE ATT&CK correlation, and zero-trust host isolation.
+        Real-time telemetry, 7 MITRE ATT&CK vectors, and 1-click zero-trust quarantine.
       </p>
+      <div class="go-badge" id="s1-go-badge">
+        <span>⚡ POWERED BY GOLANG CORE — 27µs SUB-MILLISECOND LATENCY</span>
+      </div>
     </div>
 
     <script>
       const tl = gsap.timeline({ paused: true });
-      // Elements are established from frame 0 for high-impact social preview
       tl.fromTo("#s1-badge", { opacity: 0.8, y: 0 }, { opacity: 1, y: 0, duration: 0.5 }, 0);
       tl.fromTo("#s1-shield", { scale: 0.95, opacity: 1 }, { scale: 1.05, opacity: 1, duration: 0.8, ease: "power2.out" }, 0);
       tl.fromTo("#s1-title", { opacity: 1, y: 0 }, { opacity: 1, y: 0, duration: 0.1 }, 0);
       tl.fromTo("#s1-sub", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.2);
+      tl.fromTo("#s1-go-badge", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.4);
       tl.to("#scene-1", { opacity: 0, scale: 0.98, duration: 0.35, ease: "power2.in" }, 3.15);
 
       window.__timelines = window.__timelines || {};

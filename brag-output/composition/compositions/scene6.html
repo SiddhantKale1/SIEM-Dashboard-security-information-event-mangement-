@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0b0f19;
+      }
+      #scene-6 {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        background: #0b0f19;
+        overflow: hidden;
+      }
+      #network-view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        background: #f4f5f7;
+        padding: 44px 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 14px 28px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .page-pill {
+        background: #0284c7;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 6px;
+        letter-spacing: 0.08em;
+      }
+      .brand-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0b0f19;
+        letter-spacing: -0.02em;
+      }
+      .net-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        flex: 1;
+      }
+      .net-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .net-title {
+        font-size: 20px;
+        font-weight: 900;
+        color: #0b0f19;
+        margin-bottom: 6px;
+      }
+      .net-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+      #outro-view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        background: #0b0f19;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        text-align: center;
+        opacity: 0;
+      }
+      .outro-shield {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 24px;
+      }
+      .outro-title {
+        font-size: 78px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1.05;
+        margin-bottom: 16px;
+      }
+      .outro-title span {
+        color: #82c341;
+      }
+      .outro-tagline {
+        font-size: 32px;
+        font-weight: 700;
+        color: #cbd5e1;
+        margin-bottom: 32px;
+      }
+      .badge-row {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+      }
+      .pill-badge {
+        padding: 8px 20px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #e2e8f0;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="scene-6"
+      data-composition-id="scene6"
+      data-start="24.5"
+      data-duration="5.5"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Part A: Page 5 Network Topology (24.5s - 27.2s) -->
+      <div id="network-view">
+        <div class="header-bar">
+          <div class="header-left">
+            <span class="page-pill">SLIDE 5 OF 5</span>
+            <span class="brand-title">Network Topology & Connection Audit</span>
+          </div>
+          <div style="font-size:14px; color:#166534; font-weight:800">
+            ● Subnet Scope Active: 192.168.29.0/24
+          </div>
+        </div>
+
+        <div class="net-grid">
+          <div class="net-card">
+            <div>
+              <div class="net-title">Active Subnet Infrastructure</div>
+              <div style="font-size:13px; color:#64748b; margin-bottom:16px">ARP cache discovery and gateway routing</div>
+
+              <div class="net-row">
+                <span style="font-weight:700">Gateway Router</span>
+                <span style="font-family:monospace; color:#2563eb">192.168.29.1 (eth0)</span>
+              </div>
+              <div class="net-row">
+                <span style="font-weight:700">Discovered Live Nodes</span>
+                <span style="font-weight:800; color:#166534">14 Active Physical Endpoints</span>
+              </div>
+              <div class="net-row">
+                <span style="font-weight:700">Aggregate Bandwidth</span>
+                <span style="font-weight:800">12.8 MB/s Throughput</span>
+              </div>
+            </div>
+            <div style="font-size:13px; color:#94a3b8; font-weight:600">Zero packet exfiltration detected</div>
+          </div>
+
+          <div class="net-card">
+            <div>
+              <div class="net-title">Persistent Connection Audit Trail</div>
+              <div style="font-size:13px; color:#64748b; margin-bottom:16px">Session state and network switch logging</div>
+
+              <div class="net-row">
+                <div>
+                  <div style="font-weight:800">PRIMARY-SOC-SRV</div>
+                  <div style="font-size:12px; color:#64748b">Duration: 4h 12m • 24,100 logs</div>
+                </div>
+                <span style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800">ISOLATED</span>
+              </div>
+
+              <div class="net-row">
+                <div>
+                  <div style="font-weight:800">FINANCE-WKS-02</div>
+                  <div style="font-size:12px; color:#64748b">Duration: 8h 45m • 18,200 logs</div>
+                </div>
+                <span style="background:#dcfce7; color:#166534; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800">ONLINE</span>
+              </div>
+            </div>
+            <div style="font-size:13px; color:#15803d; font-weight:700">✓ All connection lifecycles indexed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part B: Outro Punchline (27.2s - 30.0s) -->
+      <div id="outro-view">
+        <svg class="outro-shield" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+        <h1 class="outro-title">SENTINEL <span>SIEM</span></h1>
+        <p class="outro-tagline">Autonomous Security Operations in Milliseconds.</p>
+
+        <div class="badge-row">
+          <span class="pill-badge" style="border-color:#00add8; color:#00add8">⚡ GOLANG CORE (27µs)</span>
+          <span class="pill-badge" style="border-color:#82c341; color:#82c341">🛡️ 1-CLICK ZERO-TRUST QUARANTINE</span>
+          <span class="pill-badge">7 MITRE ATT&CK VECTORS</span>
+          <span class="pill-badge">AI LOG HUMANIZER</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.from("#network-view", { opacity: 0, duration: 0.3, ease: "power2.out" }, 0);
+      tl.from(".net-card", { y: 20, opacity: 0, duration: 0.4, stagger: 0.1, ease: "power2.out" }, 0.1);
+
+      // Transition to final Outro at 2.7s into scene (27.2s of video)
+      tl.to("#network-view", { opacity: 0, duration: 0.35, ease: "power2.in" }, 2.5);
+      tl.to("#outro-view", { opacity: 1, duration: 0.45, ease: "power2.out" }, 2.7);
+      tl.from(".outro-shield", { scale: 0.85, duration: 0.5, ease: "back.out(1.2)" }, 2.75);
+      tl.from(".outro-title", { y: 15, opacity: 0, duration: 0.4, ease: "power2.out" }, 2.85);
+      tl.from(".pill-badge", { y: 10, opacity: 0, duration: 0.35, stagger: 0.06, ease: "power2.out" }, 3.0);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene6"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

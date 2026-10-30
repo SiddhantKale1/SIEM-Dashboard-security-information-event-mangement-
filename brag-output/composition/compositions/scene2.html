@@ -21,10 +21,10 @@
         width: 1920px;
         height: 1080px;
         background: #f4f5f7;
-        padding: 48px 64px;
+        padding: 44px 60px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 20px;
       }
       .header-bar {
         display: flex;
@@ -33,7 +33,7 @@
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 20px;
-        padding: 16px 28px;
+        padding: 14px 28px;
         box-shadow: 0 4px 16px rgba(0,0,0,0.03);
       }
       .header-left {
@@ -41,8 +41,17 @@
         align-items: center;
         gap: 16px;
       }
+      .page-pill {
+        background: #111827;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 6px;
+        letter-spacing: 0.08em;
+      }
       .brand-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 800;
         color: #0b0f19;
         letter-spacing: -0.02em;
@@ -50,7 +59,7 @@
       .brand-badge {
         background: #82c341;
         color: #142a00;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 800;
         padding: 4px 12px;
         border-radius: 9999px;
@@ -61,7 +70,7 @@
         align-items: center;
         gap: 20px;
         color: #334155;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
       }
       .eps-tag {
@@ -69,26 +78,26 @@
         align-items: center;
         gap: 8px;
         background: #f1f5f9;
-        padding: 8px 16px;
-        border-radius: 12px;
+        padding: 6px 14px;
+        border-radius: 10px;
         color: #0b0f19;
         font-weight: 700;
       }
       .kpi-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
+        gap: 18px;
       }
       .kpi-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 24px;
-        padding: 24px;
+        border-radius: 20px;
+        padding: 20px 24px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 150px;
+        height: 130px;
       }
       .kpi-top {
         display: flex;
@@ -96,108 +105,111 @@
         align-items: flex-start;
       }
       .kpi-label {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
+        color: #64748b;
         text-transform: uppercase;
-        color: #334155;
-        letter-spacing: 0.05em;
-      }
-      .kpi-pill {
-        font-size: 12px;
-        font-weight: 800;
-        padding: 4px 10px;
-        border-radius: 9999px;
-      }
-      .pill-green {
-        background: #e0f2cb;
-        color: #1e3a04;
-      }
-      .pill-blue {
-        background: #e0f2fe;
-        color: #0369a1;
-      }
-      .pill-amber {
-        background: #fef3c7;
-        color: #78350f;
+        letter-spacing: 0.06em;
       }
       .kpi-val {
-        font-size: 44px;
+        font-size: 34px;
         font-weight: 900;
         color: #0b0f19;
         letter-spacing: -0.03em;
-        line-height: 1;
       }
-      .kpi-note {
-        font-size: 14px;
-        font-weight: 600;
-        color: #475569;
-        margin-top: 6px;
+      .kpi-sub {
+        font-size: 12px;
+        font-weight: 700;
+        color: #166534;
+        display: flex;
+        align-items: center;
+        gap: 4px;
       }
-      .chart-card {
+      .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 18px;
         flex: 1;
+      }
+      .chart-panel {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 24px;
-        padding: 28px 36px;
+        padding: 24px 28px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        position: relative;
       }
-      .chart-header {
+      .chart-top {
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
       .chart-title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 800;
         color: #0b0f19;
       }
-      .chart-legend {
+      .chart-timeframes {
         display: flex;
-        gap: 20px;
-        font-size: 14px;
-        font-weight: 700;
-      }
-      .legend-item {
-        display: flex;
-        align-items: center;
         gap: 8px;
-        color: #334155;
       }
-      .legend-color {
-        width: 12px;
-        height: 12px;
-        border-radius: 4px;
+      .tf-pill {
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #475569;
       }
-      .chart-container {
-        position: relative;
+      .tf-pill.active {
+        background: #111827;
+        color: #ffffff;
+      }
+      .svg-chart {
         width: 100%;
-        height: 380px;
-        margin-top: 20px;
+        height: 200px;
       }
-      .chart-tooltip {
-        position: absolute;
-        top: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #0b0f19;
-        color: #ffffff;
-        padding: 12px 20px;
-        border-radius: 14px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-        border: 1px solid rgba(130, 195, 65, 0.4);
-        text-align: center;
-        font-size: 14px;
-        font-weight: 600;
+      .radar-panel {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 24px 28px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       }
-      .chart-tooltip strong {
+      .radar-title {
         font-size: 18px;
-        color: #ffffff;
-        display: block;
-        margin-top: 2px;
+        font-weight: 800;
+        color: #0b0f19;
+        margin-bottom: 12px;
+      }
+      .tactic-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .tactic-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+      }
+      .bar-track {
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 9999px;
+        background: #82c341;
       }
     </style>
   </head>
@@ -205,131 +217,135 @@
     <div
       id="scene-2"
       data-composition-id="scene2"
-      data-start="0"
+      data-start="3.5"
       data-duration="5.0"
       data-width="1920"
       data-height="1080"
     >
-      <div class="header-bar" id="s2-topbar" data-layout-ignore="true">
+      <!-- Top App Bar -->
+      <div class="header-bar">
         <div class="header-left">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#82c341" stroke-width="2.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <path d="m9 12 2 2 4-4"></path>
-          </svg>
-          <div class="brand-title">SENTINEL SOC</div>
-          <div class="brand-badge">LIVE MONITORING</div>
+          <span class="page-pill">SLIDE 1 OF 5</span>
+          <span class="brand-title">Dashboard & Telemetry Stream</span>
+          <span class="brand-badge">REAL-TIME ACTIVE</span>
         </div>
         <div class="header-right">
           <div class="eps-tag">
-            <span style="color: #15803d;">●</span>
-            1,240 Events / Sec
+            <span style="color:#82c341">●</span>
+            <span>420 Events / Sec</span>
           </div>
-          <div>Subnet 192.168.1.0/24</div>
-          <div>TLS 1.3 Active</div>
+          <span>Fleet: <strong>14 Nodes Online</strong></span>
+          <span style="color:#166534; font-weight:800">Go Engine: 27µs</span>
         </div>
       </div>
 
-      <div class="kpi-row" id="s2-kpis" data-layout-ignore="true">
-        <div class="kpi-card" id="kpi-1">
+      <!-- 4 KPI Cards -->
+      <div class="kpi-row">
+        <div class="kpi-card" id="card-1">
           <div class="kpi-top">
-            <div class="kpi-label">Total Logs Ingested</div>
-            <div class="kpi-pill pill-green">LIVE STREAM</div>
+            <span class="kpi-label">TOTAL LOGS</span>
+            <span style="font-size:18px">📊</span>
           </div>
-          <div>
-            <div class="kpi-val">12,450</div>
-            <div class="kpi-note">Normalized security telemetry</div>
-          </div>
+          <div class="kpi-val">128,450</div>
+          <div class="kpi-sub">↑ 14% past hour</div>
         </div>
 
-        <div class="kpi-card" id="kpi-2">
+        <div class="kpi-card" id="card-2">
           <div class="kpi-top">
-            <div class="kpi-label">Ingested Today</div>
-            <div class="kpi-pill pill-blue">+5.1% EPS</div>
+            <span class="kpi-label">LOGS TODAY</span>
+            <span style="font-size:18px">⚡</span>
           </div>
-          <div>
-            <div class="kpi-val">15,000</div>
-            <div class="kpi-note">Peak throughput rate</div>
-          </div>
+          <div class="kpi-val">15,420</div>
+          <div class="kpi-sub" style="color:#2563eb">Continuous Stream</div>
         </div>
 
-        <div class="kpi-card" id="kpi-3">
+        <div class="kpi-card" id="card-3">
           <div class="kpi-top">
-            <div class="kpi-label">Active Anomalies</div>
-            <div class="kpi-pill pill-amber">ELEVATED</div>
+            <span class="kpi-label">SYSTEM ERRORS</span>
+            <span style="font-size:18px">🛡️</span>
           </div>
-          <div>
-            <div class="kpi-val" style="color: #b45309;">6,700</div>
-            <div class="kpi-note">Correlated hostile vectors</div>
-          </div>
+          <div class="kpi-val" style="color:#16a34a">0</div>
+          <div class="kpi-sub" style="color:#16a34a">Zero Ingestion Drops</div>
         </div>
 
-        <div class="kpi-card" id="kpi-4">
+        <div class="kpi-card" id="card-4">
           <div class="kpi-top">
-            <div class="kpi-label">Posture Score</div>
-            <div class="kpi-pill pill-green">94.8 / 100</div>
+            <span class="kpi-label">SECURITY POSTURE</span>
+            <span style="font-size:18px">🎯</span>
           </div>
-          <div>
-            <div class="kpi-val" style="color: #3b6b11;">88%</div>
-            <div class="kpi-note">Fleet compliance verified</div>
-          </div>
+          <div class="kpi-val" style="color:#15803d">88%</div>
+          <div class="kpi-sub" style="color:#15803d">SECURE / MONITORED</div>
         </div>
       </div>
 
-      <div class="chart-card" id="s2-chart" data-layout-ignore="true">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Real-Time Ingestion Stream (EPS)</div>
-            <div style="font-size: 14px; color: #475569; margin-top: 4px;">Continuous buffer aggregation across all fleet endpoints</div>
+      <!-- Main Panels -->
+      <div class="main-grid">
+        <div class="chart-panel" id="panel-chart">
+          <div class="chart-top">
+            <div>
+              <div class="chart-title">Real-Time Ingestion Velocity</div>
+              <div style="font-size:13px; color:#64748b; margin-top:2px">High-Frequency Telemetry Ingestion (Area Spline)</div>
+            </div>
+            <div class="chart-timeframes">
+              <span class="tf-pill active">Live 1h</span>
+              <span class="tf-pill">24h</span>
+              <span class="tf-pill">7d</span>
+            </div>
           </div>
-          <div class="chart-legend">
-            <div class="legend-item"><div class="legend-color" style="background: #82c341;"></div> Normal Logs (700)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div> Warnings (240)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div> Flagged Anomalies (460)</div>
-          </div>
-        </div>
 
-        <div class="chart-container">
-          <svg width="100%" height="320" viewBox="0 0 1780 320" fill="none">
+          <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none">
             <defs>
               <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#82c341" stop-opacity="0.45"></stop>
+                <stop offset="0%" stop-color="#82c341" stop-opacity="0.35"></stop>
                 <stop offset="100%" stop-color="#82c341" stop-opacity="0.0"></stop>
               </linearGradient>
             </defs>
-            <line x1="0" y1="260" x2="1780" y2="260" stroke="#e2e8f0" stroke-width="2"></line>
-            <line x1="0" y1="180" x2="1780" y2="180" stroke="#e2e8f0" stroke-width="2"></line>
-            <line x1="0" y1="100" x2="1780" y2="100" stroke="#e2e8f0" stroke-width="2"></line>
-            <line x1="0" y1="20" x2="1780" y2="20" stroke="#e2e8f0" stroke-width="2"></line>
-
-            <path id="chart-area" d="M 0 240 Q 200 220 400 230 T 800 130 T 1100 60 T 1400 160 T 1780 120 L 1780 300 L 0 300 Z" fill="url(#chartGrad)"></path>
-            <path id="chart-line" d="M 0 240 Q 200 220 400 230 T 800 130 T 1100 60 T 1400 160 T 1780 120" stroke="#3b6b11" stroke-width="5" stroke-linecap="round"></path>
-            <circle id="chart-dot" cx="1100" cy="60" r="8" fill="#ffffff" stroke="#3b6b11" stroke-width="4"></circle>
+            <path id="chart-area" d="M 0 170 Q 150 140 300 160 T 600 90 T 800 110 T 1000 40 L 1000 200 L 0 200 Z" fill="url(#chartGrad)"></path>
+            <path id="chart-line" d="M 0 170 Q 150 140 300 160 T 600 90 T 800 110 T 1000 40" fill="none" stroke="#82c341" stroke-width="4" stroke-linecap="round"></path>
           </svg>
+        </div>
 
-          <div class="chart-tooltip" id="s2-tooltip">
-            Wednesday Ingestion Peak
-            <strong>1,420 Events / Sec</strong>
+        <div class="radar-panel" id="panel-radar">
+          <div>
+            <div class="radar-title">MITRE ATT&CK Radar</div>
+            <div style="font-size:13px; color:#64748b; margin-bottom:14px">Live Vector Classification</div>
+
+            <div class="tactic-bar">
+              <div class="tactic-meta">
+                <span>Credential Access (T1110)</span>
+                <span>42%</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:42%"></div></div>
+            </div>
+
+            <div class="tactic-bar">
+              <div class="tactic-meta">
+                <span>Privilege Escalation (T1548)</span>
+                <span>28%</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:28%"></div></div>
+            </div>
+
+            <div class="tactic-bar">
+              <div class="tactic-meta">
+                <span>Defense Evasion (T1562)</span>
+                <span>18%</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:18%"></div></div>
+            </div>
           </div>
+          <div style="font-size:12px; color:#94a3b8; font-weight:600">Dynamic Heuristics Active</div>
         </div>
       </div>
     </div>
 
     <script>
       const tl = gsap.timeline({ paused: true });
-
-      tl.fromTo("#s2-topbar", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.1);
-      tl.fromTo("#kpi-1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.3);
-      tl.fromTo("#kpi-2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.4);
-      tl.fromTo("#kpi-3", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.5);
-      tl.fromTo("#kpi-4", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.6);
-
-      tl.fromTo("#s2-chart", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.7);
-      tl.fromTo("#chart-line", { strokeDasharray: 2000, strokeDashoffset: 2000 }, { strokeDashoffset: 0, duration: 1.8, ease: "power2.out" }, 0.9);
-      tl.fromTo("#chart-area", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 1.3);
-      tl.fromTo("#chart-dot", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2)" }, 1.8);
-      tl.fromTo("#s2-tooltip", { opacity: 0, scale: 0.7, y: 15 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "back.out(1.5)" }, 2.0);
-
-      tl.to("#scene-2", { opacity: 0, duration: 0.35, ease: "power2.in" }, 4.65);
+      tl.from("#scene-2", { opacity: 0, duration: 0.35, ease: "power2.out" }, 0);
+      tl.from(".kpi-card", { y: 25, opacity: 0, duration: 0.45, stagger: 0.08, ease: "back.out(1.2)" }, 0.1);
+      tl.from("#panel-chart", { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.3);
+      tl.from("#panel-radar", { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.4);
+      tl.to("#scene-2", { opacity: 0, scale: 0.98, duration: 0.35, ease: "power2.in" }, 4.65);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["scene2"] = tl;

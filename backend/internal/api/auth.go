@@ -82,6 +82,10 @@ func (h *AuthHandler) AuthDeviceMiddleware(next http.Handler) http.Handler {
 
 		// Strictly enforce device quarantine boundary
 		if device.Status == "isolated" {
+			now := time.Now().UTC()
+			device.LastSeen = now
+			_ = h.store.UpsertDevice(device)
+
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
 			_, _ = w.Write([]byte(`{"detail":"Device is isolated"}`))

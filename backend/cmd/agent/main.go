@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/sentinel/siem-backend/internal/models"
+	"github.com/sentinel/siem-backend/internal/quarantine"
 )
 
 type AgentConfig struct {
@@ -37,6 +38,7 @@ func main() {
 
 	cfg := loadOrEnroll(*serverFlag, *tokenFlag, *configFlag)
 	client := &http.Client{Timeout: 10 * time.Second}
+	qMgr := quarantine.NewManager(cfg.ServerURL)
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
@@ -47,19 +49,22 @@ func main() {
 	defer metricsTicker.Stop()
 
 	// Initial heartbeat immediately
-	sendHeartbeat(client, cfg, "online")
+	sendHeartbeat(client, cfg, qMgr, "online")
 
 	log.Printf("[+] Agent active and streaming telemetry to %s (Device ID: %s)", cfg.ServerURL, cfg.DeviceID)
 
 	for {
 		select {
 		case <-heartbeatTicker.C:
-			sendHeartbeat(client, cfg, "online")
+			sendHeartbeat(client, cfg, qMgr, "online")
 		case <-metricsTicker.C:
 			sendMetrics(client, cfg)
 		case <-stopChan:
 			log.Println("[*] Shutting down agent; notifying server of offline status...")
-			sendHeartbeat(client, cfg, "offline")
+			if qMgr.IsQuarantined() {
+				_ = qMgr.Lift()
+			}
+			sendHeartbeat(client, cfg, qMgr, "offline")
 			return
 		}
 	}
@@ -129,7 +134,7 @@ func loadOrEnroll(serverURL, token, configPath string) *AgentConfig {
 	return cfg
 }
 
-func sendHeartbeat(client *http.Client, cfg *AgentConfig, status string) {
+func sendHeartbeat(client *http.Client, cfg *AgentConfig, qMgr *quarantine.Manager, status string) {
 	endpoint := fmt.Sprintf("%s/api/v1/agent/heartbeat", strings.TrimRight(cfg.ServerURL, "/"))
 	payload := models.HeartbeatRequest{
 		DeviceID:  cfg.DeviceID,
@@ -150,7 +155,20 @@ func sendHeartbeat(client *http.Client, cfg *AgentConfig, status string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusForbidden {
-		log.Println("[⚠️] Device is in quarantine / isolated by SOC administrator.")
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		if strings.Contains(string(bodyBytes), "Device is isolated") {
+			if !qMgr.IsQuarantined() {
+				log.Println("[⚠️ QUARANTINE DIRECTIVE] Received device isolation order from Sentinel SOC.")
+				_ = qMgr.Enforce()
+			} else {
+				log.Println("[🔒] Agent actively contained under surgical zero-trust kernel quarantine.")
+			}
+		}
+	} else if resp.StatusCode == http.StatusOK {
+		if qMgr.IsQuarantined() {
+			log.Println("[🔓 RESTORATION DIRECTIVE] Received access restoration order from Sentinel SOC.")
+			_ = qMgr.Lift()
+		}
 	}
 }
 

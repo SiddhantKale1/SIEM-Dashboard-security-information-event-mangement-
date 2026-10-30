@@ -78,9 +78,10 @@ async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm
     
     # Seed admin if DB user does not exist
     if not user and form_data.username == "admin":
+        admin_pass = os.getenv("ADMIN_PASSWORD") or os.urandom(8).hex()
         user = {
             "username": "admin",
-            "password_hash": get_password_hash("admin"),
+            "password_hash": get_password_hash(admin_pass),
             "role": "admin",
             "must_change_password": False,
             "created_at": datetime.now(timezone.utc),

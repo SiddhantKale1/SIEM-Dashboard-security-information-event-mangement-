@@ -67,8 +67,7 @@ npm run dev
 
 ### 3. Log In to SOC Command Console
 * **Default URL:** `http://localhost:5173`
-* **Username:** `admin`
-* **Password:** `admin`
+* **Authentication:** Set your administrator password via the `ADMIN_PASSWORD` environment variable (or let the server generate a random secure token on first boot). Operators can also register accounts directly from the login page.
 
 ---
 

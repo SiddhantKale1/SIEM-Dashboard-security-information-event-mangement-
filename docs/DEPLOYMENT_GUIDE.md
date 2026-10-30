@@ -84,9 +84,7 @@ If you have a Linux server or cloud virtual machine with Docker installed:
 ## 🔐 Default Access & Remote Agent Enrollment
 
 1. Open your deployed frontend URL (`https://sentinel-siem.vercel.app` or `http://<YOUR_SERVER_IP>`).
-2. Log in with the default Administrator credentials:
-   - **Username:** `admin`
-   - **Password:** `admin`
+2. Log in with your configured administrator credentials (username `admin` and the password set in your `ADMIN_PASSWORD` environment variable), or register an operator account from the login screen.
 3. Navigate to **Fleet Management / Devices** (`/devices`) and click **1-Click Installers**.
 4. Run the one-line installer command on any machine you wish to monitor:
    - **Linux:**

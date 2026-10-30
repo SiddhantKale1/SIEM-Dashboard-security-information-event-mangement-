@@ -138,22 +138,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, ok := h.store.GetUser(username)
-	if !ok && username == "admin" {
-		// Auto-seed admin user if missing
-		hash, _ := auth.HashPassword("admin")
-		adminUser := &models.User{
-			ID:                 uuid.New().String(),
-			Username:           "admin",
-			PasswordHash:       hash,
-			Role:               "admin",
-			MustChangePassword: false,
-			CreatedAt:          time.Now().UTC(),
-		}
-		_ = h.store.CreateUser(adminUser)
-		user = adminUser
-		ok = true
-	}
-
 	if !ok || !auth.CheckPassword(password, user.PasswordHash) {
 		http.Error(w, `{"detail":"Incorrect username or password"}`, http.StatusUnauthorized)
 		return

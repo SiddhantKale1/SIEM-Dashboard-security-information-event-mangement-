@@ -1,10 +1,12 @@
 package database
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -63,7 +65,23 @@ func NewStore(dataDir string) (*Store, error) {
 
 	// Seed admin if not present
 	if _, ok := store.Users["admin"]; !ok {
-		adminHash, _ := auth.HashPassword("admin")
+		adminPass := os.Getenv("ADMIN_INITIAL_PASSWORD")
+		if adminPass == "" {
+			adminPass = os.Getenv("ADMIN_PASSWORD")
+		}
+		if adminPass == "" {
+			// Generate cryptographically secure initial password
+			b := make([]byte, 10)
+			_, _ = rand.Read(b)
+			adminPass = hex.EncodeToString(b)
+			log.Println("==================================================================")
+			log.Println("[🔐 INITIAL ADMIN CREDENTIALS GENERATED]")
+			log.Println("  Username: admin")
+			log.Printf("  Password: %s\n", adminPass)
+			log.Println("  (Set ADMIN_PASSWORD in environment to configure a static password)")
+			log.Println("==================================================================")
+		}
+		adminHash, _ := auth.HashPassword(adminPass)
 		store.Users["admin"] = &models.User{
 			ID:                 uuid.New().String(),
 			Username:           "admin",

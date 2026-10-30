@@ -29,6 +29,7 @@ type TestHarness struct {
 }
 
 func setupTestHarness(t *testing.T) *TestHarness {
+	t.Setenv("ADMIN_PASSWORD", "admin")
 	tempDir, err := os.MkdirTemp("", "siem-sandbox-test-*")
 	if err != nil {
 		t.Fatalf("Failed to create temp test dir: %v", err)

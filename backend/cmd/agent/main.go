@@ -17,6 +17,12 @@ import (
 	"syscall"
 	"time"
 
+	gocpu "github.com/shirou/gopsutil/v3/cpu"
+	godisk "github.com/shirou/gopsutil/v3/disk"
+	gomem "github.com/shirou/gopsutil/v3/mem"
+	gonet "github.com/shirou/gopsutil/v3/net"
+	goproc "github.com/shirou/gopsutil/v3/process"
+
 	"github.com/sentinel/siem-backend/internal/models"
 	"github.com/sentinel/siem-backend/internal/quarantine"
 )
@@ -34,7 +40,7 @@ func main() {
 	configFlag := flag.String("config", "agent_config.json", "Path to config file")
 	flag.Parse()
 
-	log.Println("[*] Starting Native Go SIEM Endpoint Agent...")
+	log.Println("[*] Starting Native Go SIEM Universal Security Agent...")
 
 	cfg := loadOrEnroll(*serverFlag, *tokenFlag, *configFlag)
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -43,22 +49,28 @@ func main() {
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
-	heartbeatTicker := time.NewTicker(10 * time.Second)
-	metricsTicker := time.NewTicker(15 * time.Second)
+	heartbeatTicker := time.NewTicker(5 * time.Second)
+	metricsTicker := time.NewTicker(10 * time.Second)
 	defer heartbeatTicker.Stop()
 	defer metricsTicker.Stop()
 
 	// Initial heartbeat immediately
 	sendHeartbeat(client, cfg, qMgr, "online")
 
-	log.Printf("[+] Agent active and streaming telemetry to %s (Device ID: %s)", cfg.ServerURL, cfg.DeviceID)
+	log.Printf("[+] Go Agent active and monitoring host: %s (Device ID: %s)", cfg.ServerURL, cfg.DeviceID)
 
 	for {
 		select {
 		case <-heartbeatTicker.C:
-			sendHeartbeat(client, cfg, qMgr, "online")
+			status := "online"
+			if qMgr.IsQuarantined() {
+				status = "isolated"
+			}
+			sendHeartbeat(client, cfg, qMgr, status)
 		case <-metricsTicker.C:
-			sendMetrics(client, cfg)
+			if !qMgr.IsQuarantined() {
+				sendMetricsAndTelemetry(client, cfg)
+			}
 		case <-stopChan:
 			log.Println("[*] Shutting down agent; notifying server of offline status...")
 			if qMgr.IsQuarantined() {
@@ -99,7 +111,7 @@ func loadOrEnroll(serverURL, token, configPath string) *AgentConfig {
 		MACAddress:   macAddress,
 		OS:           runtime.GOOS,
 		OSVersion:    runtime.Version(),
-		AgentVersion: "2.0.0-go-native",
+		AgentVersion: "2.0.0-golang-native",
 	}
 
 	bodyBytes, _ := json.Marshal(reqPayload)
@@ -160,8 +172,6 @@ func sendHeartbeat(client *http.Client, cfg *AgentConfig, qMgr *quarantine.Manag
 			if !qMgr.IsQuarantined() {
 				log.Println("[⚠️ QUARANTINE DIRECTIVE] Received device isolation order from Sentinel SOC.")
 				_ = qMgr.Enforce()
-			} else {
-				log.Println("[🔒] Agent actively contained under surgical zero-trust kernel quarantine.")
 			}
 		}
 	} else if resp.StatusCode == http.StatusOK {
@@ -172,34 +182,105 @@ func sendHeartbeat(client *http.Client, cfg *AgentConfig, qMgr *quarantine.Manag
 	}
 }
 
-func sendMetrics(client *http.Client, cfg *AgentConfig) {
-	endpoint := fmt.Sprintf("%s/api/v1/agent/metrics", strings.TrimRight(cfg.ServerURL, "/"))
+func sendMetricsAndTelemetry(client *http.Client, cfg *AgentConfig) {
+	serverBase := strings.TrimRight(cfg.ServerURL, "/")
 
-	// Collect lightweight native metrics
-	metric := models.MetricItem{
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		CPUPercent:     12.5,
-		MemoryPercent:  38.2,
-		DiskPercent:    45.0,
-		NetworkRXBytes: 1048576,
-		NetworkTXBytes: 2097152,
+	// 1. Gather real hardware metrics
+	cpuPct := 0.0
+	if pcts, err := gocpu.Percent(0, false); err == nil && len(pcts) > 0 {
+		cpuPct = pcts[0]
 	}
 
-	payload := models.MetricsBatchRequest{
+	memPct := 0.0
+	if vmem, err := gomem.VirtualMemory(); err == nil {
+		memPct = vmem.UsedPercent
+	}
+
+	diskPct := 0.0
+	rootPath := "/"
+	if runtime.GOOS == "windows" {
+		rootPath = "C:\\"
+	}
+	if d, err := godisk.Usage(rootPath); err == nil {
+		diskPct = d.UsedPercent
+	}
+
+	var rxBytes int64
+	var txBytes int64
+	if ioCounters, err := gonet.IOCounters(false); err == nil && len(ioCounters) > 0 {
+		rxBytes = int64(ioCounters[0].BytesRecv)
+		txBytes = int64(ioCounters[0].BytesSent)
+	}
+
+	metric := models.MetricItem{
+		Timestamp:      time.Now().UTC().Format(time.RFC3339),
+		CPUPercent:     cpuPct,
+		MemoryPercent:  memPct,
+		DiskPercent:    diskPct,
+		NetworkRXBytes: rxBytes,
+		NetworkTXBytes: txBytes,
+	}
+
+	// Post metrics
+	metricsPayload := models.MetricsBatchRequest{
 		DeviceID: cfg.DeviceID,
 		Metrics:  []models.MetricItem{metric},
 	}
+	postJSON(client, fmt.Sprintf("%s/api/v1/agent/metrics", serverBase), metricsPayload, cfg.DeviceCredential)
 
-	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(body))
+	// 2. Gather top 40 processes
+	if procs, err := goproc.Processes(); err == nil {
+		items := make([]models.Process, 0, 40)
+		for _, p := range procs {
+			name, err := p.Name()
+			if err != nil || name == "" {
+				continue
+			}
+			cPct, _ := p.CPUPercent()
+			mPct, _ := p.MemoryPercent()
+			uName, _ := p.Username()
+			exePath, _ := p.Exe()
+
+			items = append(items, models.Process{
+				PID:           int(p.Pid),
+				Name:          name,
+				CPUPercent:    cPct,
+				MemoryPercent: float64(mPct),
+				Executable:    exePath,
+				Username:      uName,
+			})
+			if len(items) >= 40 {
+				break
+			}
+		}
+		if len(items) > 0 {
+			procPayload := models.ProcessesRequest{
+				DeviceID:  cfg.DeviceID,
+				Processes: items,
+			}
+			postJSON(client, fmt.Sprintf("%s/api/v1/agent/processes", serverBase), procPayload, cfg.DeviceCredential)
+		}
+	}
+}
+
+func postJSON(client *http.Client, url string, payload interface{}, token string) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+	if err != nil {
+		return
+	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", cfg.DeviceCredential))
-
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 func getOutboundIP() string {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -310,4 +311,40 @@ func (h *EnrollmentHandler) ServeAgentPy(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "text/x-python")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(source))
+}
+
+func (h *EnrollmentHandler) ServeWindowsBinary(w http.ResponseWriter, r *http.Request) {
+	candidates := []string{
+		"bin/sentinel-agent.exe",
+		"backend/bin/sentinel-agent.exe",
+		"/home/sidd/SIEM-Dashboard-security-information-event-mangement-/backend/bin/sentinel-agent.exe",
+	}
+	for _, p := range candidates {
+		if data, err := os.ReadFile(p); err == nil {
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("Content-Disposition", "attachment; filename=\"sentinel-agent.exe\"")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(data)
+			return
+		}
+	}
+	http.Error(w, `{"detail":"Windows agent binary not found"}`, http.StatusNotFound)
+}
+
+func (h *EnrollmentHandler) ServeLinuxBinary(w http.ResponseWriter, r *http.Request) {
+	candidates := []string{
+		"bin/sentinel-agent",
+		"backend/bin/sentinel-agent",
+		"/home/sidd/SIEM-Dashboard-security-information-event-mangement-/backend/bin/sentinel-agent",
+	}
+	for _, p := range candidates {
+		if data, err := os.ReadFile(p); err == nil {
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("Content-Disposition", "attachment; filename=\"sentinel-agent\"")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(data)
+			return
+		}
+	}
+	http.Error(w, `{"detail":"Linux agent binary not found"}`, http.StatusNotFound)
 }

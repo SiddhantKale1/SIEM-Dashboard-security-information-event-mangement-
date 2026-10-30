@@ -220,39 +220,86 @@ func (m *Manager) liftLinux() error {
 	return nil
 }
 
-// enforceWindows applies netsh advfirewall rules.
+// enforceWindows applies surgical netsh advfirewall rules compatible with Cloudflare tunnels and LAN.
 func (m *Manager) enforceWindows() error {
 	if !m.isRoot {
 		log.Println("[ℹ️ QUARANTINE] Windows non-admin execution: Simulated firewall isolation.")
 		return nil
 	}
 
-	// Whitelist SIEM outbound
-	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
-		"name=SENTINEL_ALLOW_SIEM", "dir=out", "action=allow",
-		fmt.Sprintf("remoteip=%s", m.siemHost),
-		fmt.Sprintf("remoteport=%d", m.siemPort),
-		"protocol=TCP").Run()
+	execPath, err := os.Executable()
+	if err != nil {
+		execPath = "sentinel-agent.exe"
+	}
 
-	// Block all other outbound traffic
-	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
-		"name=SENTINEL_BLOCK_OUT", "dir=out", "action=block").Run()
+	// Clean any previous rules first
+	_ = m.liftWindows()
 
-	// Block all inbound traffic
+	// 1. Whitelist Loopback
 	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
-		"name=SENTINEL_BLOCK_IN", "dir=in", "action=block").Run()
+		"name=SENTINEL_QUARANTINE_LOOPBACK", "dir=out", "action=allow",
+		"remoteip=127.0.0.1", "enable=yes").Run()
 
+	// 2. Whitelist DNS (UDP/TCP 53) so Cloudflare tunnel domain resolution never breaks
+	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=SENTINEL_QUARANTINE_DNS_UDP", "dir=out", "action=allow",
+		"protocol=UDP", "remoteport=53", "enable=yes").Run()
+	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=SENTINEL_QUARANTINE_DNS_TCP", "dir=out", "action=allow",
+		"protocol=TCP", "remoteport=53", "enable=yes").Run()
+
+	// 3. Whitelist DHCP (UDP 67/68) to retain IP lease
+	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=SENTINEL_QUARANTINE_DHCP", "dir=out", "action=allow",
+		"protocol=UDP", "localport=68", "remoteport=67", "enable=yes").Run()
+
+	// 4. Whitelist Sentinel Native Go Agent Binary
+	_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=SENTINEL_QUARANTINE_AGENT", "dir=out", "action=allow",
+		fmt.Sprintf("program=%s", execPath), "enable=yes").Run()
+
+	// 5. Whitelist direct SIEM host if IP
+	if m.siemHost != "" && m.siemHost != "127.0.0.1" {
+		_ = exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
+			"name=SENTINEL_QUARANTINE_SIEM_IP", "dir=out", "action=allow",
+			fmt.Sprintf("remoteip=%s", m.siemHost),
+			fmt.Sprintf("remoteport=%d", m.siemPort),
+			"protocol=TCP", "enable=yes").Run()
+	}
+
+	// 6. Set Default Outbound and Inbound Policy to Block (severs all browsers, user traffic, and malware)
+	_ = exec.Command("netsh", "advfirewall", "set", "allprofiles", "firewallpolicy", "blockinbound,blockoutbound").Run()
+
+	// 7. Flush DNS
+	_ = exec.Command("ipconfig", "/flushdns").Run()
 	return nil
 }
 
-// liftWindows removes netsh advfirewall quarantine rules.
+// liftWindows removes netsh advfirewall quarantine rules and restores full connectivity.
 func (m *Manager) liftWindows() error {
 	if !m.isRoot {
 		return nil
 	}
-	_ = exec.Command("netsh", "advfirewall", "firewall", "delete", "rule", "name=SENTINEL_ALLOW_SIEM").Run()
-	_ = exec.Command("netsh", "advfirewall", "firewall", "delete", "rule", "name=SENTINEL_BLOCK_OUT").Run()
-	_ = exec.Command("netsh", "advfirewall", "firewall", "delete", "rule", "name=SENTINEL_BLOCK_IN").Run()
+
+	// Restore default policy: Block Inbound, Allow Outbound
+	_ = exec.Command("netsh", "advfirewall", "set", "allprofiles", "firewallpolicy", "blockinbound,allowoutbound").Run()
+
+	// Remove quarantine rules
+	for _, rule := range []string{
+		"SENTINEL_QUARANTINE_LOOPBACK",
+		"SENTINEL_QUARANTINE_DNS_UDP",
+		"SENTINEL_QUARANTINE_DNS_TCP",
+		"SENTINEL_QUARANTINE_DHCP",
+		"SENTINEL_QUARANTINE_AGENT",
+		"SENTINEL_QUARANTINE_SIEM_IP",
+		"SENTINEL_ALLOW_SIEM",
+		"SENTINEL_BLOCK_OUT",
+		"SENTINEL_BLOCK_IN",
+	} {
+		_ = exec.Command("netsh", "advfirewall", "firewall", "delete", "rule", fmt.Sprintf("name=%s", rule)).Run()
+	}
+
+	_ = exec.Command("ipconfig", "/flushdns").Run()
 	return nil
 }
 

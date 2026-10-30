@@ -105,6 +105,10 @@ func NewRouter(
 		v1.Head("/enrollment/install.sh", enrollmentHandler.ServeLinuxInstaller)
 		v1.Get("/enrollment/install.ps1", enrollmentHandler.ServeWindowsInstaller)
 		v1.Head("/enrollment/install.ps1", enrollmentHandler.ServeWindowsInstaller)
+		v1.Get("/enrollment/agent.exe", enrollmentHandler.ServeWindowsBinary)
+		v1.Head("/enrollment/agent.exe", enrollmentHandler.ServeWindowsBinary)
+		v1.Get("/enrollment/agent.bin", enrollmentHandler.ServeLinuxBinary)
+		v1.Head("/enrollment/agent.bin", enrollmentHandler.ServeLinuxBinary)
 		v1.Get("/enrollment/agent.py", enrollmentHandler.ServeAgentPy)
 		v1.Head("/enrollment/agent.py", enrollmentHandler.ServeAgentPy)
 

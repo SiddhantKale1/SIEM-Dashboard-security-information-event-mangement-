@@ -15,6 +15,14 @@
 
 ---
 
+## 🖥️ Live Endpoint Forensics & Deep Telemetry
+
+![Sentinel Endpoint Forensics & Process Tree](docs/images/device-details.png)
+
+*Real-time endpoint deep-dive displaying live CPU/memory load, bidirectional socket I/O, telemetry sample timelines, 1-click zero-trust host quarantine, and active system process inspection.*
+
+---
+
 ## 📁 Repository Structure
 
 ```text

@@ -6,29 +6,30 @@ import uuid
 from app.api.auth import get_current_user
 from app.database.connection import get_db
 from app.services.ai_engine import AIEngine
+from app.services.rbac import get_user_device_ids, require_not_viewer
 
 router = APIRouter(prefix="/api/v1/anomalies", tags=["anomalies"])
 
 @router.get("/stats")
 async def get_anomaly_stats(current_user: dict = Depends(get_current_user)):
     """
-    Returns AI security posture metrics:
-    - Active threats count
-    - Critical threats count
-    - Real-time AI Risk Score (0 - 100)
-    - MITRE ATT&CK tactic distribution
-    - Threat timeline (last 24 hours)
+    Returns AI security posture metrics scoped by operator permissions.
     """
     db = get_db()
-    total = await db.anomalies.count_documents({})
-    active = await db.anomalies.count_documents({"status": "active"})
-    critical = await db.anomalies.count_documents({"severity": "critical", "status": "active"})
-    high = await db.anomalies.count_documents({"severity": "high", "status": "active"})
-    medium = await db.anomalies.count_documents({"severity": "medium", "status": "active"})
-    resolved = await db.anomalies.count_documents({"status": "resolved"})
+    is_admin = current_user.get("role") == "admin"
+    base_filter: dict = {}
+    if not is_admin:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        base_filter = {"device_id": {"$in": user_device_ids}}
+
+    total = await db.anomalies.count_documents(base_filter)
+    active = await db.anomalies.count_documents({**base_filter, "status": "active"})
+    critical = await db.anomalies.count_documents({**base_filter, "severity": "critical", "status": "active"})
+    high = await db.anomalies.count_documents({**base_filter, "severity": "high", "status": "active"})
+    medium = await db.anomalies.count_documents({**base_filter, "severity": "medium", "status": "active"})
+    resolved = await db.anomalies.count_documents({**base_filter, "status": "resolved"})
 
     # Dynamic AI Risk Score Calculation
-    # Base risk starts from 0, weighted by active threats
     calculated_risk = min(100, (critical * 35) + (high * 15) + (medium * 5))
     if active == 0:
         posture = "SECURE"
@@ -40,7 +41,7 @@ async def get_anomaly_stats(current_user: dict = Depends(get_current_user)):
         posture = "MONITORED"
 
     # Fetch recent active anomalies for MITRE breakdown
-    cursor = db.anomalies.find({"status": "active"}).limit(100)
+    cursor = db.anomalies.find({**base_filter, "status": "active"}).limit(100)
     active_items = await cursor.to_list(length=100)
     
     tactic_counts: dict[str, int] = {}
@@ -70,16 +71,27 @@ async def list_anomalies(
     limit: int = Query(50, ge=1, le=100)
 ):
     """
-    List detected anomalies with pagination and filtering.
+    List detected anomalies with pagination and filtering, scoped to user devices.
     """
     db = get_db()
+    is_admin = current_user.get("role") == "admin"
     query: dict = {}
+
+    if not is_admin:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        if device_id:
+            if device_id not in user_device_ids:
+                raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view anomalies for this device")
+            query["device_id"] = device_id
+        else:
+            query["device_id"] = {"$in": user_device_ids}
+    elif device_id:
+        query["device_id"] = device_id
+
     if status and status != "all":
         query["status"] = status
     if severity and severity != "all":
         query["severity"] = severity
-    if device_id:
-        query["device_id"] = device_id
 
     total = await db.anomalies.count_documents(query)
     cursor = db.anomalies.find(query).sort("detected_at", -1)
@@ -131,8 +143,14 @@ async def get_anomaly(anomaly_id: str, current_user: dict = Depends(get_current_
     if not target:
         raise HTTPException(status_code=404, detail="Anomaly not found")
 
-    target["_id"] = str(target["_id"])
+    is_admin = current_user.get("role") == "admin"
     did = target.get("device_id")
+    if not is_admin and did:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        if did not in user_device_ids:
+            raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view this incident")
+
+    target["_id"] = str(target["_id"])
     if did:
         d_doc = await db.devices.find_one({"device_id": did})
         if d_doc:
@@ -157,12 +175,20 @@ async def resolve_anomaly(anomaly_id: str, current_user: dict = Depends(get_curr
     """
     Mark an active anomaly as resolved.
     """
+    require_not_viewer(current_user, "resolve anomalies")
     db = get_db()
     all_cursor = db.anomalies.find({})
     items = await all_cursor.to_list(length=2000)
     target = next((item for item in items if str(item["_id"]) == anomaly_id), None)
     if not target:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anomaly not found")
+
+    is_admin = current_user.get("role") == "admin"
+    did = target.get("device_id")
+    if not is_admin and did:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        if did not in user_device_ids:
+            raise HTTPException(status_code=403, detail="Access denied: You do not have permission to resolve incidents for this device")
 
     now = datetime.now(timezone.utc)
     await db.anomalies.update_one(

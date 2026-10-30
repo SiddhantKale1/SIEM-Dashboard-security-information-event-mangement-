@@ -24,12 +24,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only redirect if an authenticated route fails, NOT the login page itself!
+    // Only redirect if an authenticated route fails, NOT the login or register requests/pages themselves!
     if (error.response?.status === 401) {
-      const isLoginRequest = error.config?.url?.includes('/auth/login');
-      if (!isLoginRequest) {
+      const isAuthRequest = 
+        error.config?.url?.includes('/auth/login') || 
+        error.config?.url?.includes('/auth/register');
+
+      if (!isAuthRequest) {
         localStorage.removeItem('access_token');
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           window.location.href = '/login';
         }
       }

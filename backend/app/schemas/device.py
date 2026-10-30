@@ -12,3 +12,9 @@ class UserResponse(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "analyst"
+

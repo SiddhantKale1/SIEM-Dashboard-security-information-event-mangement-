@@ -23,6 +23,7 @@ export default function Endpoints({ defaultTab }: { defaultTab?: 'view_devices' 
   const location = useLocation();
   const [devices, setDevices] = useState<any[]>([]);
   const [tokens, setTokens] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ username: string; role?: string } | null>(null);
   const [activeInstallCommands, setActiveInstallCommands] = useState<{ linux: string; windows: string } | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
   const [generatingToken, setGeneratingToken] = useState(false);
@@ -50,12 +51,14 @@ export default function Endpoints({ defaultTab }: { defaultTab?: 'view_devices' 
 
   const loadData = async () => {
     try {
-      const [devRes, tokRes] = await Promise.all([
+      const [devRes, tokRes, meRes] = await Promise.all([
         api.get('/network/active'),
-        api.get('/enrollment/tokens')
+        api.get('/enrollment/tokens'),
+        api.get('/auth/me').catch(() => ({ data: { username: 'admin', role: 'admin' } }))
       ]);
       setDevices(devRes.data?.devices || []);
       setTokens(tokRes.data || []);
+      setCurrentUser(meRes.data);
     } catch (e) {
       console.error("Failed to load endpoint data:", e);
     }
@@ -302,42 +305,46 @@ export default function Endpoints({ defaultTab }: { defaultTab?: 'view_devices' 
                         <span className="text-[#4b5563]">{dev.subnet || '—'}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#9ca3af] block">MAC ADDRESS</span>
-                        <span className="text-[#4b5563] truncate block">{dev.mac_address || '—'}</span>
+                        <span className="text-[10px] text-[#9ca3af] block">OPERATOR OWNER</span>
+                        <span className="font-bold text-[#111827]">@{dev.owner || 'admin'}</span>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-2 border-t border-[#f4f5f7]">
                       <div className="flex items-center gap-2">
-                        {isIsolated ? (
-                          <button
-                            type="button"
-                            onClick={(e) => handleRestore(dev.device_id, e)}
-                            className="px-2.5 py-1.5 bg-[#dcfce7] text-[#166534] rounded-lg text-xs font-bold hover:bg-[#bbf7d0] transition-colors flex items-center gap-1"
-                          >
-                            <Unlock className="w-3 h-3" />
-                            <span>Restore</span>
-                          </button>
-                        ) : dev.device_id ? (
-                          <button
-                            type="button"
-                            onClick={(e) => handleIsolate(dev.device_id, e)}
-                            className="px-2.5 py-1.5 bg-[#fee2e2] text-[#991b1b] rounded-lg text-xs font-bold hover:bg-[#fecaca] transition-colors flex items-center gap-1"
-                          >
-                            <Lock className="w-3 h-3" />
-                            <span>Isolate</span>
-                          </button>
-                        ) : null}
+                        {currentUser?.role !== 'viewer' && (
+                          isIsolated ? (
+                            <button
+                              type="button"
+                              onClick={(e) => handleRestore(dev.device_id, e)}
+                              className="px-2.5 py-1.5 bg-[#dcfce7] text-[#166534] rounded-lg text-xs font-bold hover:bg-[#bbf7d0] transition-colors flex items-center gap-1"
+                            >
+                              <Unlock className="w-3 h-3" />
+                              <span>Restore</span>
+                            </button>
+                          ) : dev.device_id ? (
+                            <button
+                              type="button"
+                              onClick={(e) => handleIsolate(dev.device_id, e)}
+                              className="px-2.5 py-1.5 bg-[#fee2e2] text-[#991b1b] rounded-lg text-xs font-bold hover:bg-[#fecaca] transition-colors flex items-center gap-1"
+                            >
+                              <Lock className="w-3 h-3" />
+                              <span>Isolate</span>
+                            </button>
+                          ) : null
+                        )}
 
-                        <button
-                          type="button"
-                          onClick={(e) => handleDeleteDevice(dev, e)}
-                          className="p-1.5 text-[#ef4444] hover:bg-[#fee2e2] rounded-lg transition-colors"
-                          title="Delete endpoint"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {currentUser?.role === 'admin' && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteDevice(dev, e)}
+                            className="p-1.5 text-[#ef4444] hover:bg-[#fee2e2] rounded-lg transition-colors"
+                            title="Delete endpoint (Admin only)"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
 
                       <button
@@ -369,6 +376,7 @@ export default function Endpoints({ defaultTab }: { defaultTab?: 'view_devices' 
                 <thead>
                   <tr className="border-b border-[#e5e7eb] text-[#6b7280] font-mono text-[11px]">
                     <th className="py-2.5 px-3">DEVICE</th>
+                    <th className="py-2.5 px-3">OPERATOR</th>
                     <th className="py-2.5 px-3">OS</th>
                     <th className="py-2.5 px-3">STATUS</th>
                     <th className="py-2.5 px-3">IP ADDRESS</th>
@@ -389,6 +397,9 @@ export default function Endpoints({ defaultTab }: { defaultTab?: 'view_devices' 
                         <td className="py-3 px-3 font-bold text-[#111827] flex items-center gap-2">
                           <Monitor className="w-4 h-4 text-[#82c341]" />
                           <span>{dev.hostname || 'Unknown Endpoint'}</span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[#6b7280]">
+                          <span className="font-semibold text-[#111827]">@{dev.owner || 'admin'}</span>
                         </td>
                         <td className="py-3 px-3">
                           <span className="font-semibold text-[#374151]">

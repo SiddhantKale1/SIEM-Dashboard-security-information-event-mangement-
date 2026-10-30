@@ -5,7 +5,7 @@ from datetime import timedelta, datetime, timezone
 import logging
 
 from app.auth.security import verify_password, create_access_token, decode_access_token, get_password_hash
-from app.schemas.device import TokenResponse, UserResponse, ChangePasswordRequest
+from app.schemas.device import TokenResponse, UserResponse, ChangePasswordRequest, RegisterRequest
 from app.database.connection import get_db
 from app.config.settings import settings
 from slowapi import Limiter
@@ -107,6 +107,58 @@ async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm
         data={"sub": user["username"], "role": user.get("role")}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.LOGIN_RATE_LIMIT)
+async def register(request: Request, body: RegisterRequest):
+    clean_username = body.username.strip()
+    if not clean_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username cannot be empty",
+        )
+    if len(clean_username) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be at least 3 characters",
+        )
+    if len(body.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters",
+        )
+
+    db = get_db()
+    existing_user = await db.users.find_one({"username": clean_username})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Username '{clean_username}' is already registered",
+        )
+
+    valid_roles = {"admin", "analyst", "viewer"}
+    user_role = body.role.lower().strip() if body.role else "analyst"
+    if user_role not in valid_roles:
+        user_role = "analyst"
+
+    new_user = {
+        "username": clean_username,
+        "password_hash": get_password_hash(body.password),
+        "role": user_role,
+        "must_change_password": False,
+        "created_at": datetime.now(timezone.utc),
+        "last_login": datetime.now(timezone.utc),
+    }
+    await db.users.insert_one(new_user)
+    logger.info(f"New user registered: {clean_username} ({user_role})")
+
+    access_token_expires = timedelta(minutes=60)
+    access_token = create_access_token(
+        data={"sub": clean_username, "role": user_role},
+        expires_delta=access_token_expires,
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: dict = Depends(get_current_user)):

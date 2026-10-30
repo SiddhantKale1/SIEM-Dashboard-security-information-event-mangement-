@@ -5,6 +5,7 @@ import re
 from app.api.auth import get_current_user
 from app.database.connection import get_db
 from app.services.log_humanizer import humanize_log
+from app.services.rbac import verify_device_access, require_admin, require_not_viewer
 
 router = APIRouter(prefix="/api/v1/devices", tags=["devices"])
 
@@ -54,17 +55,16 @@ async def evaluate_device_status(device: dict, db) -> dict:
 @router.get("/{device_id}")
 async def get_device(device_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    device = await db.devices.find_one({"device_id": device_id})
-    if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
-
+    device = await verify_device_access(device_id, current_user, db)
     device = await evaluate_device_status(device, db)
     device["_id"] = str(device["_id"])
+    device["owner"] = device.get("owner") or device.get("created_by") or "admin"
     return device
 
 @router.get("/{device_id}/metrics")
 async def get_device_metrics(device_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
+    await verify_device_access(device_id, current_user, db)
     cursor = db.metrics.find({"device_id": device_id}).sort("timestamp", -1).limit(20)
     metrics = await cursor.to_list(length=20)
     metrics.reverse()
@@ -77,10 +77,9 @@ async def get_device_metrics(device_id: str, current_user: dict = Depends(get_cu
 @router.post("/{device_id}/isolate")
 async def isolate_device(device_id: str, current_user: dict = Depends(get_current_user)):
     """Isolate a device: blocks agent heartbeats and marks it isolated."""
+    require_not_viewer(current_user, "quarantine endpoints")
     db = get_db()
-    device = await db.devices.find_one({"device_id": device_id})
-    if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+    device = await verify_device_access(device_id, current_user, db)
     if device.get("status") == "isolated":
         raise HTTPException(status_code=400, detail="Device is already isolated")
 
@@ -100,10 +99,9 @@ async def isolate_device(device_id: str, current_user: dict = Depends(get_curren
 @router.post("/{device_id}/restore")
 async def restore_device(device_id: str, current_user: dict = Depends(get_current_user)):
     """Restore a previously isolated device."""
+    require_not_viewer(current_user, "restore quarantined endpoints")
     db = get_db()
-    device = await db.devices.find_one({"device_id": device_id})
-    if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+    device = await verify_device_access(device_id, current_user, db)
     if device.get("status") != "isolated":
         raise HTTPException(status_code=400, detail="Device is not isolated")
 
@@ -123,16 +121,10 @@ async def restore_device(device_id: str, current_user: dict = Depends(get_curren
 @router.delete("/{device_id}")
 async def delete_device(device_id: str, current_user: dict = Depends(get_current_user)):
     """
-    Permanently delete a device from the SIEM monitoring system.
-    Cascades removal across:
-    - devices
-    - logs
-    - metrics
-    - processes
-    - device_events
-    - connection_history
-    - anomalies
+    Permanently delete a device from the SIEM monitoring system (Admin only).
+    Cascades removal across logs, metrics, processes, events, and anomalies.
     """
+    require_admin(current_user, "permanently delete monitored endpoints")
     db = get_db()
 
     # Look up device by device_id or string _id / ObjectId
@@ -191,6 +183,7 @@ async def delete_device(device_id: str, current_user: dict = Depends(get_current
 async def get_device_events(device_id: str, current_user: dict = Depends(get_current_user)):
     """Return audit event timeline for a device."""
     db = get_db()
+    await verify_device_access(device_id, current_user, db)
     cursor = db.device_events.find({"device_id": device_id}).sort("timestamp", -1).limit(50)
     events = await cursor.to_list(length=50)
     for e in events:
@@ -205,6 +198,7 @@ async def get_device_system_logs(
 ):
     """Returns actual system/OS/auth logs collected from the device agent."""
     db = get_db()
+    await verify_device_access(device_id, current_user, db)
     cursor = db.logs.find({"device_id": device_id}).sort("timestamp", -1).limit(limit)
     logs = await cursor.to_list(length=limit)
     for l in logs:
@@ -226,6 +220,7 @@ async def get_device_network_logs(
     - Active network anomalies
     """
     db = get_db()
+    await verify_device_access(device_id, current_user, db)
     
     # 1. Connection history sessions
     conn_cursor = db.connection_history.find({"device_id": device_id}).sort("connected_at", -1).limit(50)
@@ -423,6 +418,7 @@ async def get_device_processes(
 ):
     """Returns real process snapshot reported by device agent."""
     db = get_db()
+    await verify_device_access(device_id, current_user, db)
     proc_doc = await db.processes.find_one({"device_id": device_id})
     if not proc_doc:
         return {"device_id": device_id, "processes": [], "timestamp": None}

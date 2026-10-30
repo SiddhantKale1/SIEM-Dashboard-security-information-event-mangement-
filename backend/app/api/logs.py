@@ -1,32 +1,38 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from app.api.auth import get_current_user
 from app.database.connection import get_db
-
 from app.services.log_humanizer import humanize_log
+from app.services.rbac import get_user_device_ids
 
 router = APIRouter(prefix="/api/v1/logs", tags=["logs"])
 
 @router.get("/stats")
 async def get_log_stats(current_user: dict = Depends(get_current_user)):
-    """Returns real log counts using efficient count_documents() — no full table scan."""
+    """Returns real log counts scoped by operator permissions."""
     db = get_db()
+    is_admin = current_user.get("role") == "admin"
+    base_filter = {}
+    if not is_admin:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        base_filter = {"device_id": {"$in": user_device_ids}}
+
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_naive = today_start.replace(tzinfo=None)
     today_str = today_start.isoformat()
 
-    total = await db.logs.count_documents({})
+    total = await db.logs.count_documents(base_filter)
     # Count today logs trying naive datetime first, then ISO string format
-    logs_today = await db.logs.count_documents({"timestamp": {"$gte": today_naive}})
+    logs_today = await db.logs.count_documents({**base_filter, "timestamp": {"$gte": today_naive}})
     if logs_today == 0:
-        logs_today = await db.logs.count_documents({"timestamp": {"$gte": today_str}})
+        logs_today = await db.logs.count_documents({**base_filter, "timestamp": {"$gte": today_str}})
     if logs_today == 0 and total > 0:
         logs_today = total
 
-    errors = await db.logs.count_documents({"severity": "error"})
-    warnings = await db.logs.count_documents({"severity": "warning"})
+    errors = await db.logs.count_documents({**base_filter, "severity": "error"})
+    warnings = await db.logs.count_documents({**base_filter, "severity": "warning"})
 
     return {
         "logs_today": logs_today,
@@ -42,6 +48,12 @@ async def get_log_hourly(
 ):
     """Returns log counts bucketed over time (1h, 24h, 7d) for dashboard telemetry area chart."""
     db = get_db()
+    is_admin = current_user.get("role") == "admin"
+    base_filter = {}
+    if not is_admin:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        base_filter = {"device_id": {"$in": user_device_ids}}
+
     now_utc = datetime.now(timezone.utc)
 
     if timeframe in ("1h", "live"):
@@ -61,14 +73,14 @@ async def get_log_hourly(
     since_str = since_naive.isoformat()
 
     # Query with naive datetime first (matching Mongita storage), then string
-    cursor = db.logs.find({"timestamp": {"$gte": since_naive}})
+    cursor = db.logs.find({**base_filter, "timestamp": {"$gte": since_naive}})
     logs = await cursor.to_list(length=50000)
     if not logs:
-        cursor = db.logs.find({"timestamp": {"$gte": since_str}})
+        cursor = db.logs.find({**base_filter, "timestamp": {"$gte": since_str}})
         logs = await cursor.to_list(length=50000)
-    if not logs:
+    if not logs and is_admin:
         # Fallback to recent logs capped collection
-        cursor = db.logs.find({}).sort("timestamp", -1).limit(5000)
+        cursor = db.logs.find(base_filter).sort("timestamp", -1).limit(5000)
         logs = await cursor.to_list(length=5000)
 
     result = []
@@ -142,11 +154,22 @@ async def get_logs(
     policy_violations_only: bool = Query(False, description="Filter specifically for prohibited activity (YouTube, gaming, etc.)")
 ):
     db = get_db()
+    is_admin = current_user.get("role") == "admin"
     filter_: dict = {}
+
+    if not is_admin:
+        user_device_ids = await get_user_device_ids(current_user, db)
+        if device_id:
+            if device_id not in user_device_ids:
+                raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view logs for this device")
+            filter_["device_id"] = device_id
+        else:
+            filter_["device_id"] = {"$in": user_device_ids}
+    elif device_id:
+        filter_["device_id"] = device_id
+
     if severity and severity != "all":
         filter_["severity"] = severity
-    if device_id:
-        filter_["device_id"] = device_id
 
     # Server-side search: fetch all severity-matched logs, filter in Python, then paginate
     if search and search.strip() or policy_violations_only:

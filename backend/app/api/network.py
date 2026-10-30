@@ -26,8 +26,16 @@ async def get_network_traffic(current_user: dict = Depends(get_current_user)):
     recent_cutoff = now - timedelta(seconds=90)
 
     # Find devices whose last_seen is within 90s AND whose IP is on the current subnet
+    is_admin = current_user.get("role") == "admin"
+    username = current_user.get("username")
+
     all_devices_cursor = db.devices.find({})
-    all_devices = await all_devices_cursor.to_list(length=2000)
+    raw_devices = await all_devices_cursor.to_list(length=2000)
+    if is_admin:
+        all_devices = raw_devices
+    else:
+        all_devices = [d for d in raw_devices if d.get("owner") == username or d.get("created_by") == username]
+    user_device_ids = [d.get("device_id") for d in all_devices if d.get("device_id")]
 
     active_count = 0
     total_tx = 0
@@ -52,7 +60,8 @@ async def get_network_traffic(current_user: dict = Depends(get_current_user)):
             active_count += 1
 
     # Get latest metrics sum for throughput estimate
-    recent_metrics_cursor = db.metrics.find({}).sort("timestamp", -1).limit(50)
+    metrics_query = {} if is_admin else {"device_id": {"$in": user_device_ids}}
+    recent_metrics_cursor = db.metrics.find(metrics_query).sort("timestamp", -1).limit(50)
     recent_metrics = await recent_metrics_cursor.to_list(length=50)
     for m in recent_metrics:
         total_tx += m.get("network_tx_bytes", 0)
@@ -86,8 +95,13 @@ async def get_active_network_devices(
     now = datetime.now(timezone.utc)
     recent_cutoff = now - timedelta(seconds=90)
 
-    # Optional ARP scan to discover unmanaged devices on current subnet
+    is_admin = current_user.get("role") == "admin"
+    username = current_user.get("username")
+
+    # Optional ARP scan to discover unmanaged devices on current subnet (Admin only)
     if scan:
+        if not is_admin:
+            raise HTTPException(status_code=403, detail="Permission denied: Only SOC Administrators can trigger subnet discovery scans")
         arp_nodes = NetworkManager.get_arp_devices(active_scan=True)
         for node in arp_nodes:
             mac = node["mac_address"]
@@ -101,16 +115,23 @@ async def get_active_network_devices(
                     "os": "unknown",
                     "status": "discovered",
                     "subnet": current_subnet,
+                    "owner": "admin",
+                    "created_by": "admin",
                     "last_seen": now,
                     "created_at": now
                 })
 
-    # Fetch devices and filter strictly for the current network
+    # Fetch devices and filter strictly: Admin sees entire fleet; non-admins see only their enrolled devices
     cursor = db.devices.find({})
-    devices = await cursor.to_list(length=2000)
+    raw_devices = await cursor.to_list(length=2000)
+    if is_admin:
+        devices = raw_devices
+    else:
+        devices = [d for d in raw_devices if d.get("owner") == username or d.get("created_by") == username]
 
     active_list = []
     for d in devices:
+        d["owner"] = d.get("owner") or d.get("created_by") or "admin"
         ip = d.get("ip_address", "")
         last_seen = d.get("last_seen")
         curr_status = d.get("status")
@@ -177,10 +198,23 @@ async def get_connection_history(
     Dedicated Connection History tab:
     Chronological audit of all past and current endpoint connections,
     network switches, disconnect timestamps, and transmitted volume.
+    Scoped by operator permissions.
     """
     db = get_db()
+    is_admin = current_user.get("role") == "admin"
+    username = current_user.get("username")
     query: dict = {}
-    if device_id:
+
+    if not is_admin:
+        all_devs = await db.devices.find({}).to_list(length=2000)
+        user_device_ids = [d.get("device_id") for d in all_devs if d.get("device_id") and (d.get("owner") == username or d.get("created_by") == username)]
+        if device_id:
+            if device_id not in user_device_ids:
+                raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view connection history for this device")
+            query["device_id"] = device_id
+        else:
+            query["device_id"] = {"$in": user_device_ids}
+    elif device_id:
         query["device_id"] = device_id
 
     cursor = db.connection_history.find(query).sort("connected_at", -1).limit(limit)

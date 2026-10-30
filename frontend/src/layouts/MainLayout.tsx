@@ -20,7 +20,7 @@ import api from '../services/api';
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; role?: string } | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeThreats, setActiveThreats] = useState<number>(0);
@@ -29,7 +29,7 @@ export default function MainLayout() {
     api.get('/auth/me')
       .then(res => setUser(res.data))
       .catch(() => {
-        setUser({ username: 'Admin' });
+        setUser({ username: 'Admin', role: 'admin' });
       });
 
     api.get('/anomalies/stats')
@@ -74,6 +74,29 @@ export default function MainLayout() {
               </div>
             )}
           </div>
+
+          {/* Fleet Scope Badge */}
+          {!sidebarCollapsed && (
+            <div className="mb-5 px-1">
+              <div className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 ${
+                user?.role === 'admin'
+                  ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]'
+                  : user?.role === 'viewer'
+                  ? 'bg-[#f9fafb] border-[#e5e7eb] text-[#4b5563]'
+                  : 'bg-[#eff6ff] border-[#bfdbfe] text-[#1e40af]'
+              }`}>
+                <ShieldCheck className="w-4 h-4 shrink-0 text-[#82c341]" />
+                <div className="flex flex-col leading-tight overflow-hidden">
+                  <span className="font-bold text-[10px] uppercase tracking-wider truncate">
+                    {user?.role === 'admin' ? 'Global Fleet (Admin)' : 'Isolated Scope'}
+                  </span>
+                  <span className="text-[9px] opacity-75 truncate">
+                    {user?.role === 'admin' ? 'Viewing all systems' : `Operator @${user?.username || 'user'}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Navigation Links */}
           <nav className="flex flex-col gap-1.5">
@@ -259,29 +282,42 @@ export default function MainLayout() {
             </button>
 
             {/* Operator Profile Pill */}
-            <div className="flex items-center gap-2.5 bg-white border border-[#e5e7eb] pl-1.5 pr-4 py-1 rounded-full shadow-2xs cursor-pointer hover:border-[#d1d5db] transition-all">
+            <div className="flex items-center gap-2.5 bg-white border border-[#e5e7eb] pl-2 pr-3.5 py-1 rounded-full shadow-2xs">
               <div className="w-7 h-7 rounded-full bg-[#111827] text-white text-xs font-bold flex items-center justify-center">
-                {user?.username?.substring(0, 2).toUpperCase() || 'AD'}
+                {user?.username?.substring(0, 2).toUpperCase() || 'OP'}
               </div>
               <div className="flex flex-col text-left leading-none">
-                <span className="text-xs font-bold text-[#111827]">
-                  {user?.username || 'admin'}
-                </span>
-                <span className="text-[10px] text-[#9ca3af] mt-0.5">
-                  admin@siem.local
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-[#111827]">
+                    {user?.username || 'Operator'}
+                  </span>
+                  <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                    user?.role === 'admin'
+                      ? 'bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]'
+                      : user?.role === 'viewer'
+                      ? 'bg-[#f3f4f6] text-[#4b5563] border border-[#e5e7eb]'
+                      : 'bg-[#dbeafe] text-[#1e40af] border border-[#bfdbfe]'
+                  }`}>
+                    {user?.role || 'analyst'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#9ca3af] mt-0.5 font-mono">
+                  {user?.username ? `${user.username}@siem.local` : 'operator@siem.local'}
                 </span>
               </div>
             </div>
 
-            {/* Enroll Device Button */}
-            <button
-              type="button"
-              onClick={() => navigate('/endpoints')}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-[#111827] text-white rounded-xl text-xs font-semibold hover:bg-black transition-all shadow-2xs"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#82c341]" />
-              <span>Enroll Device</span>
-            </button>
+            {/* Enroll Device Button (Hidden for read-only viewers) */}
+            {user?.role !== 'viewer' && (
+              <button
+                type="button"
+                onClick={() => navigate('/endpoints')}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-[#111827] text-white rounded-xl text-xs font-semibold hover:bg-black transition-all shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#82c341]" />
+                <span>Enroll Device</span>
+              </button>
+            )}
           </div>
         </header>
 

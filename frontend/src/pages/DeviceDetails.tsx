@@ -37,6 +37,7 @@ export default function DeviceDetails() {
   const [networkData, setNetworkData] = useState<any>({ sessions: [], network_logs: [], visited_domains: [], bandwidth_metrics: [], anomalies: [] });
   const [processes, setProcesses] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ username: string; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [actioning, setActioning] = useState(false);
   const [activeTab, setActiveTab] = useState<'system_logs' | 'network_logs' | 'telemetry' | 'timeline'>('system_logs');
@@ -53,16 +54,18 @@ export default function DeviceDetails() {
   const loadAllDeviceData = async () => {
     if (!id) return;
     try {
-      const [devRes, metRes, sysLogRes, netRes, procRes, evtRes] = await Promise.all([
+      const [devRes, metRes, sysLogRes, netRes, procRes, evtRes, meRes] = await Promise.all([
         api.get(`/devices/${id}`),
         api.get(`/devices/${id}/metrics`).catch(() => ({ data: [] })),
         api.get(`/devices/${id}/system-logs`).catch(() => ({ data: [] })),
         api.get(`/devices/${id}/network-logs`).catch(() => ({ data: { sessions: [], network_logs: [], bandwidth_metrics: [], anomalies: [] } })),
         api.get(`/devices/${id}/processes`).catch(() => ({ data: { processes: [] } })),
-        api.get(`/devices/${id}/events`).catch(() => ({ data: [] }))
+        api.get(`/devices/${id}/events`).catch(() => ({ data: [] })),
+        api.get('/auth/me').catch(() => ({ data: { username: 'admin', role: 'admin' } }))
       ]);
 
       setDevice(devRes.data);
+      setCurrentUser(meRes.data);
       setMetrics(Array.isArray(metRes.data) ? metRes.data : []);
       setSystemLogs(Array.isArray(sysLogRes.data) ? sysLogRes.data : []);
       setNetworkData(netRes.data || { sessions: [], network_logs: [], bandwidth_metrics: [], anomalies: [] });
@@ -241,6 +244,8 @@ export default function DeviceDetails() {
                 <span>•</span>
                 <span>Subnet: <strong style={{ color: '#111827' }}>{device.subnet || '—'}</strong></span>
                 <span>•</span>
+                <span>Operator: <strong style={{ color: '#82c341' }}>@{device.owner || 'admin'}</strong></span>
+                <span>•</span>
                 <span>Agent: <strong style={{ color: '#10b981' }}>{device.agent_version ? `v${device.agent_version}` : '—'}</strong></span>
               </div>
             </div>
@@ -257,7 +262,7 @@ export default function DeviceDetails() {
               <RefreshCw size={14} /> Refresh
             </button>
 
-            {device.status === 'online' && (
+            {currentUser?.role !== 'viewer' && device.status === 'online' && (
               <button 
                 onClick={handleIsolate} 
                 disabled={actioning}
@@ -268,7 +273,7 @@ export default function DeviceDetails() {
               </button>
             )}
 
-            {device.status === 'isolated' && (
+            {currentUser?.role !== 'viewer' && device.status === 'isolated' && (
               <button 
                 onClick={handleRestore} 
                 disabled={actioning}
@@ -279,21 +284,23 @@ export default function DeviceDetails() {
               </button>
             )}
 
-            <button 
-              onClick={handleDeleteDevice}
-              disabled={actioning}
-              className="neo-btn"
-              style={{
-                padding: '8px 16px',
-                fontSize: '0.78rem',
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1.5px solid rgba(239, 68, 68, 0.4)',
-                color: '#f87171'
-              }}
-              title="Permanently remove this device from SIEM monitoring"
-            >
-              <Trash2 size={14} /> {actioning ? 'Deleting...' : 'Delete System'}
-            </button>
+            {currentUser?.role === 'admin' && (
+              <button 
+                onClick={handleDeleteDevice}
+                disabled={actioning}
+                className="neo-btn"
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.78rem',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1.5px solid rgba(239, 68, 68, 0.4)',
+                  color: '#f87171'
+                }}
+                title="Permanently remove this device from SIEM monitoring (Admin only)"
+              >
+                <Trash2 size={14} /> {actioning ? 'Deleting...' : 'Delete System'}
+              </button>
+            )}
           </div>
         </div>
       </div>

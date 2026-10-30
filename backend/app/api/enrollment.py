@@ -14,6 +14,7 @@ from app.auth.security import get_password_hash, verify_password, create_access_
 from app.schemas.enrollment import DeviceRegistrationRequest, DeviceRegistrationResponse
 from app.api.auth import get_current_user
 from app.services.network_service import NetworkManager
+from app.services.rbac import require_not_viewer
 
 router = APIRouter(prefix="/api/v1/enrollment", tags=["enrollment"])
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ async def create_enrollment_token(
     specific_token: Optional[str] = Query(None, description="Optional custom or pre-existing token string"),
     current_user: dict = Depends(get_current_user)
 ):
+    require_not_viewer(current_user, "create enrollment tokens")
     db = get_db()
     token = specific_token.strip() if specific_token else generate_enrollment_token()
     token_hash = hash_enrollment_token(token)
@@ -149,6 +151,7 @@ async def register_device(request: DeviceRegistrationRequest):
     device_id = (existing_device.get("device_id") if existing_device and existing_device.get("device_id") else None) or f"device-{uuid.uuid4().hex[:8]}"
     net_info = NetworkManager.get_local_network_info()
     
+    creator = valid_token_doc.get("created_by") or "admin"
     new_device = {
         "device_id": device_id,
         "hostname": request.hostname,
@@ -160,6 +163,8 @@ async def register_device(request: DeviceRegistrationRequest):
         "status": "online",
         "subnet": net_info.get("subnet", "192.168.1.0/24"),
         "last_seen": now,
+        "owner": existing_device.get("owner", creator) if existing_device else creator,
+        "created_by": existing_device.get("created_by", creator) if existing_device else creator,
         "enrolled_at": existing_device.get("enrolled_at", now) if existing_device else now,
         "created_at": existing_device.get("created_at", now) if existing_device else now
     }
@@ -212,10 +217,12 @@ async def register_device(request: DeviceRegistrationRequest):
 
 @router.get("/tokens")
 async def list_tokens(current_user: dict = Depends(get_current_user)):
-    """List all active enrollment tokens."""
+    """List active enrollment tokens scoped by user permission (Admin sees all, Operators see their own)."""
     db = get_db()
     now = datetime.now(timezone.utc)
-    cursor = db.enrollment_tokens.find({}).sort("created_at", -1)
+    is_admin = current_user.get("role") == "admin"
+    query = {} if is_admin else {"created_by": current_user["username"]}
+    cursor = db.enrollment_tokens.find(query).sort("created_at", -1)
     tokens = await cursor.to_list(length=100)
     result = []
     for t in tokens:
@@ -244,13 +251,20 @@ async def list_tokens(current_user: dict = Depends(get_current_user)):
 
 @router.delete("/tokens/{token_id}")
 async def revoke_token(token_id: str, current_user: dict = Depends(get_current_user)):
-    """Revoke an enrollment token."""
+    """Revoke an enrollment token (Admins can revoke any; operators can revoke their own)."""
     db = get_db()
+    is_admin = current_user.get("role") == "admin"
     tokens_cursor = db.enrollment_tokens.find({})
     tokens = await tokens_cursor.to_list(length=200)
     target = next((t for t in tokens if str(t["_id"]) == token_id), None)
     if not target:
         raise HTTPException(status_code=404, detail="Token not found")
+    
+    if not is_admin and target.get("created_by") != current_user["username"]:
+        raise HTTPException(
+            status_code=403, 
+            detail="Permission denied: You can only revoke enrollment tokens that you created"
+        )
     
     await db.enrollment_tokens.update_one(
         {"_id": target["_id"]},

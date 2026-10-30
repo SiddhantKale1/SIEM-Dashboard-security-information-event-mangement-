@@ -1,4 +1,27 @@
-# Python
+# ==============================================================================
+# Git Ignore Configuration - Sentinel SIEM Platform
+# ==============================================================================
+
+# --- Sensitive Files, Secrets & Credentials (NEVER COMMIT) ---
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_rsa*
+*.id_rsa
+*.pub
+*agent_config.json
+*.credentials.json
+.jwt_secret
+*.token
+
+# --- Python ---
 __pycache__/
 *.py[cod]
 *.pyo
@@ -11,37 +34,64 @@ build/
 venv/
 env/
 .venv/
-.env
-*.log
+.pytest_cache/
+htmlcov/
+.coverage
+*.coverage.*
 
-# Node / Frontend
+# --- Node / Frontend ---
 node_modules/
 dist/
 .cache/
 *.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Database (persistent file-based DB — don't commit data)
-backend/siem_data/
-backend-python/siem_data/
-siem_state.json
-
-# Go build outputs
+# --- Go Build Outputs & Binaries ---
 backend/bin/
 backend/server
 backend/agent
+backend/siem-server
+backend/siem-agent
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 
-# Agent config (contains device credentials — keep secret)
-agents/linux/agent_config.json
-agents/windows/agent_config.json
+# --- Database & Persistent Storage ---
+backend/siem_data/
+backend-python/siem_data/
+siem_state.json
+*.db
+*.sqlite
+*.sqlite3
 
-# IDE / OS
+# --- Video & HyperFrames Build Caches & Temp Artifacts ---
+**/.hyperframes/
+**/.brag.hf-*
+**/work-*
+
+# --- IDE, Editor & OS Clutter ---
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Test artifacts
-.pytest_cache/
-htmlcov/
-.coverage
+# --- Logs & Runtime Output ---
+*.log
+logs/
+*.tmp
+*.bak

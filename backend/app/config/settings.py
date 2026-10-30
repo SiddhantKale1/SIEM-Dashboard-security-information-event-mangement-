@@ -41,11 +41,24 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     USE_MOCK_DB: bool = True
     LOGIN_RATE_LIMIT: str = "200/minute"
+    SERVER_PUBLIC_URL: str = ""
+    CORS_ORIGIN_REGEX: str = r"^https?://.*$"
 
     class Config:
         env_file = ".env"
 
 settings = Settings()
+
+# Support PORT environment variable provided by cloud hosts (Render, Railway, Heroku)
+if os.environ.get("PORT"):
+    try:
+        settings.API_PORT = int(os.environ["PORT"])
+    except ValueError:
+        pass
+
+# Support SERVER_PUBLIC_URL if provided
+if os.environ.get("SERVER_PUBLIC_URL"):
+    settings.SERVER_PUBLIC_URL = os.environ["SERVER_PUBLIC_URL"].rstrip("/")
 
 # Override JWT_SECRET with persistent secure value (unless explicitly set via env)
 if not os.environ.get("JWT_SECRET"):

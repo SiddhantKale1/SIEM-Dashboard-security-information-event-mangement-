@@ -28,6 +28,7 @@ def hash_enrollment_token(token: str) -> str:
 
 @router.post("/token")
 async def create_enrollment_token(
+    request: Request,
     reusable: bool = Query(True, description="Allow token to be used on multiple endpoint PCs"),
     days_valid: int = Query(30, ge=1, le=365),
     specific_token: Optional[str] = Query(None, description="Optional custom or pre-existing token string"),
@@ -37,9 +38,19 @@ async def create_enrollment_token(
     token = specific_token.strip() if specific_token else generate_enrollment_token()
     token_hash = hash_enrollment_token(token)
     expires_at = datetime.now(timezone.utc) + timedelta(days=days_valid)
-    net_info = NetworkManager.get_local_network_info()
-    server_ip = net_info.get("server_ip", "127.0.0.1")
-    server_url = f"http://{server_ip}:8000"
+
+    from app.config.settings import settings
+    if settings.SERVER_PUBLIC_URL:
+        server_url = settings.SERVER_PUBLIC_URL.rstrip("/")
+    else:
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host_header = request.headers.get("host")
+        if host_header and "localhost" not in host_header and "127.0.0.1" not in host_header:
+            server_url = f"{proto}://{host_header}"
+        else:
+            net_info = NetworkManager.get_local_network_info()
+            server_ip = net_info.get("server_ip", "127.0.0.1")
+            server_url = f"http://{server_ip}:8000"
 
     await db.enrollment_tokens.insert_one({
         "token_hash": token_hash,

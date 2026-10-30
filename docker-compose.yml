@@ -9,6 +9,43 @@ services:
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
+    networks:
+      - siem-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: siem_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=siem_mvp
+      - USE_MOCK_DB=false
+      - CORS_ORIGIN_REGEX=^https?://.*$
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - siem-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: siem_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - siem-network
 
 volumes:
   mongodb_data:
+
+networks:
+  siem-network:
+    driver: bridge

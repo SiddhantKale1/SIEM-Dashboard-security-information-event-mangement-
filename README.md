@@ -27,7 +27,17 @@ siem-mvp/
 └── docker-compose.yml  # Docker environment setup
 ```
 
-## Quick Start
+## 🌐 Cloud Deployment (Vercel + Render + MongoDB Atlas)
+
+The project is fully pre-configured for free cloud deployment:
+- **Frontend:** 1-click deploy to [Vercel](https://vercel.com) (configured via `frontend/vercel.json`)
+- **Backend:** 1-click deploy to [Render](https://render.com) (configured via `render.yaml` and `backend/Procfile`)
+- **Database:** Free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) M0 cluster
+- **Docker:** All-in-one container stack via `docker-compose.yml`
+
+👉 **[Read the Complete Cloud Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** for step-by-step setup instructions.
+
+## Quick Start (Local)
 
 *To be updated during implementation*
 

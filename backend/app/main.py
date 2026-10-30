@@ -39,10 +39,10 @@ app.include_router(devices_router)
 app.include_router(logs_router)
 app.include_router(anomalies_router)
 
-# CORS middleware — support localhost, 127.0.0.1, and all local private network IPs
+# CORS middleware — support localhost, LAN IPs, and Cloud Deployments (Vercel, Netlify, Render, Railway)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)(:\d+)?$",
+    allow_origin_regex=settings.CORS_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

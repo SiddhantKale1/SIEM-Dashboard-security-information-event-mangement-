@@ -91,6 +91,11 @@ func NewStore(dataDir string) (*Store, error) {
 			CreatedAt:          time.Now().UTC(),
 		}
 		_ = store.saveLocked()
+	} else if adminPass := os.Getenv("ADMIN_PASSWORD"); adminPass != "" {
+		// Sync admin password if explicitly configured in environment
+		adminHash, _ := auth.HashPassword(adminPass)
+		store.Users["admin"].PasswordHash = adminHash
+		_ = store.saveLocked()
 	}
 
 	return store, nil
